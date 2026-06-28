@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WayDrop iOS Demo</title>
+<title>WayDrop Demo</title>
 <style>
-  /* ── Reset & Base ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
     --navy: #1c2b45;
     --amber: #F5A623;
     --blue: #2563EB;
+    --blue-android: #4A6CF7;
     --bg: #F5F6FA;
     --card: #FFFFFF;
     --text-secondary: #6B7280;
@@ -28,468 +28,319 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
+    padding: 40px 20px 60px;
     gap: 32px;
   }
 
-  /* ── Header ── */
-  .demo-header {
-    text-align: center;
-    color: white;
-  }
-  .demo-header h1 {
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-  }
-  .demo-header p {
-    font-size: 14px;
-    color: rgba(255,255,255,0.6);
-    margin-top: 6px;
+  .demo-header { text-align: center; color: white; }
+  .demo-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .demo-header p { font-size: 14px; color: rgba(255,255,255,0.6); margin-top: 6px; }
+  .demo-badge {
+    background: rgba(245,166,35,0.15); border: 1px solid rgba(245,166,35,0.4);
+    color: #F5A623; font-size: 12px; font-weight: 600; padding: 4px 12px;
+    border-radius: 100px; display: inline-flex; align-items: center; gap: 6px;
   }
 
-  /* ── Phone Shell ── */
-  .phone {
-    width: 375px;
-    height: 780px;
-    background: #1a1a1a;
-    border-radius: 52px;
-    padding: 12px;
-    box-shadow:
-      0 0 0 2px #333,
-      0 40px 120px rgba(0,0,0,0.7),
-      inset 0 0 0 1px rgba(255,255,255,0.06);
-    position: relative;
-    flex-shrink: 0;
-  }
-
-  .phone-inner {
-    width: 100%;
-    height: 100%;
-    background: var(--bg);
-    border-radius: 42px;
-    overflow: hidden;
-    position: relative;
-  }
-
-  /* Dynamic Island */
-  .dynamic-island {
-    position: absolute;
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 120px;
-    height: 34px;
-    background: #1a1a1a;
-    border-radius: 20px;
-    z-index: 100;
-  }
-
-  /* ── Screen Container ── */
-  .screen {
-    position: absolute;
-    inset: 0;
-    border-radius: 42px;
-    overflow: hidden;
-    opacity: 0;
-    transform: translateX(100%);
-    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
-  }
-  .screen.active {
-    opacity: 1;
-    transform: translateX(0);
-    pointer-events: all;
-  }
-  .screen.exit-left {
-    opacity: 0;
-    transform: translateX(-30%);
-    pointer-events: none;
-  }
-
-  /* ── Status Bar ── */
-  .status-bar {
-    height: 60px;
-    padding: 18px 24px 0;
+  /* ── Two-phone layout ── */
+  .phones-row {
     display: flex;
+    flex-direction: row;
+    gap: 60px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .phone-section {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .platform-label {
+    color: rgba(255,255,255,0.7);
     font-size: 13px;
     font-weight: 600;
-    color: var(--navy);
-    position: relative;
-    z-index: 10;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  /* ── iOS Phone Shell ── */
+  .phone {
+    width: 375px; height: 780px;
+    background: #1a1a1a; border-radius: 52px; padding: 12px;
+    box-shadow: 0 0 0 2px #333, 0 40px 120px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.06);
+    position: relative; flex-shrink: 0;
+  }
+  .phone-inner {
+    width: 100%; height: 100%; background: var(--bg);
+    border-radius: 42px; overflow: hidden; position: relative;
+  }
+  .dynamic-island {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    width: 120px; height: 34px; background: #1a1a1a; border-radius: 20px; z-index: 100;
+  }
+
+  /* ── Android Phone Shell ── */
+  .android-phone {
+    width: 375px; height: 780px;
+    background: #111; border-radius: 36px; padding: 10px;
+    box-shadow: 0 0 0 2px #2a2a2a, 0 40px 120px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.04);
+    position: relative; flex-shrink: 0;
+  }
+  .android-phone-inner {
+    width: 100%; height: 100%; background: var(--bg);
+    border-radius: 28px; overflow: hidden; position: relative;
+  }
+  /* Front camera pill for Android */
+  .android-notch {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    width: 12px; height: 12px; background: #111; border-radius: 50%; z-index: 100;
+  }
+
+  /* ── Shared Screen System ── */
+  .screen {
+    position: absolute; inset: 0; border-radius: 42px; overflow: hidden;
+    opacity: 0; transform: translateX(100%);
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    pointer-events: none;
+  }
+  .screen.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+  .screen.exit-left { opacity: 0; transform: translateX(-30%); pointer-events: none; }
+
+  /* Android screens have less rounding */
+  .android-screen {
+    position: absolute; inset: 0; border-radius: 28px; overflow: hidden;
+    opacity: 0; transform: translateX(100%);
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    pointer-events: none;
+  }
+  .android-screen.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+  .android-screen.exit-left { opacity: 0; transform: translateX(-30%); pointer-events: none; }
+
+  /* ── Status Bars ── */
+  .status-bar {
+    height: 60px; padding: 18px 24px 0;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; font-weight: 600; color: var(--navy);
+    position: relative; z-index: 10;
   }
   .status-bar.white { color: white; }
   .status-bar-icons { display: flex; gap: 6px; align-items: center; }
-  .status-bar-icons svg { opacity: 0.85; }
 
-  /* ── Shared Components ── */
+  /* Android status bar is shorter */
+  .android-status-bar {
+    height: 40px; padding: 10px 20px 0;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; font-weight: 600; color: var(--navy);
+    position: relative; z-index: 10;
+  }
+
+  /* ── Screen Content ── */
   .screen-content {
     padding: 0 24px;
     overflow-y: auto;
     height: calc(100% - 60px);
   }
+  .android-screen-content {
+    padding: 0 20px;
+    overflow-y: auto;
+    height: calc(100% - 40px);
+  }
 
+  /* ── Buttons ── */
   .btn-primary {
-    width: 100%;
-    height: 52px;
-    background: var(--amber);
-    color: white;
-    font-size: 16px;
-    font-weight: 600;
-    border: none;
-    border-radius: 14px;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
-    letter-spacing: 0.2px;
+    width: 100%; height: 52px; background: var(--amber);
+    color: white; font-size: 16px; font-weight: 600;
+    border: none; border-radius: 14px; cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s; letter-spacing: 0.2px;
   }
   .btn-primary:hover { opacity: 0.92; transform: scale(0.99); }
   .btn-primary:active { transform: scale(0.97); }
 
   .btn-secondary {
-    width: 100%;
-    height: 52px;
-    background: white;
-    color: var(--navy);
-    font-size: 16px;
-    font-weight: 500;
-    border: 1.5px solid var(--border);
-    border-radius: 14px;
-    cursor: pointer;
-    transition: opacity 0.15s;
+    width: 100%; height: 52px; background: white; color: var(--navy);
+    font-size: 16px; font-weight: 500; border: 1.5px solid var(--border);
+    border-radius: 14px; cursor: pointer; transition: opacity 0.15s; margin-top: 12px;
   }
-  .btn-secondary:hover { background: var(--bg); }
+  .btn-secondary:hover { opacity: 0.85; }
 
   .btn-blue {
-    width: 100%;
-    height: 52px;
-    background: var(--blue);
-    color: white;
-    font-size: 16px;
-    font-weight: 600;
-    border: none;
-    border-radius: 14px;
-    cursor: pointer;
+    width: 100%; height: 52px; background: var(--blue);
+    color: white; font-size: 16px; font-weight: 600;
+    border: none; border-radius: 14px; cursor: pointer;
     transition: opacity 0.15s;
   }
+  .btn-blue:hover { opacity: 0.9; }
 
+  /* Android Material button */
+  .btn-material {
+    width: 100%; height: 52px; background: var(--blue-android);
+    color: white; font-size: 16px; font-weight: 600;
+    border: none; border-radius: 12px; cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn-material:hover { opacity: 0.92; transform: scale(0.99); }
+  .btn-material-amber {
+    width: 100%; height: 52px; background: var(--amber);
+    color: white; font-size: 16px; font-weight: 600;
+    border: none; border-radius: 12px; cursor: pointer; transition: opacity 0.15s;
+  }
+  .btn-material-amber:hover { opacity: 0.92; }
+  .btn-material-outline {
+    width: 100%; height: 44px; background: transparent;
+    color: var(--blue-android); font-size: 14px; font-weight: 600;
+    border: 1.5px solid var(--blue-android); border-radius: 12px; cursor: pointer;
+    transition: background 0.15s; margin-top: 8px;
+  }
+  .btn-material-outline:hover { background: rgba(74,108,247,0.06); }
+
+  /* ── Navigation ── */
+  .nav-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 0 8px; position: relative;
+  }
+  .back-btn {
+    width: 32px; height: 32px; border: none; background: none;
+    cursor: pointer; color: var(--navy); padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .nav-title { font-size: 17px; font-weight: 600; color: var(--navy); }
+
+  .android-nav-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 0 8px; background: white;
+    margin: 0 -20px; padding-left: 16px; padding-right: 16px;
+    box-shadow: 0 1px 0 var(--border);
+    margin-bottom: 16px;
+  }
+  .android-nav-title { font-size: 18px; font-weight: 600; color: var(--navy); }
+  .android-back-btn {
+    width: 32px; height: 32px; border: none; background: none;
+    cursor: pointer; color: var(--navy); padding: 0;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  /* ── Form Fields ── */
   .text-field {
-    width: 100%;
-    height: 52px;
-    background: white;
-    border: 1.5px solid var(--border);
-    border-radius: 12px;
-    padding: 0 16px;
-    font-size: 15px;
-    color: var(--navy);
-    outline: none;
-    transition: border-color 0.2s;
+    width: 100%; padding: 14px 16px; border: 1.5px solid var(--border);
+    border-radius: 12px; font-size: 15px; color: var(--navy);
+    background: white; outline: none; transition: border-color 0.2s;
     font-family: inherit;
   }
   .text-field:focus { border-color: var(--blue); }
+  .field-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+  .field-group { display: flex; flex-direction: column; gap: 14px; }
 
-  .field-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--navy);
-    margin-bottom: 6px;
-    display: block;
+  /* Android outlined field */
+  .material-field {
+    width: 100%; padding: 14px 14px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: 15px; color: var(--navy);
+    background: white; outline: none; transition: border-color 0.2s; font-family: inherit;
   }
-  .field-group { display: flex; flex-direction: column; gap: 16px; }
+  .material-field:focus { border-color: var(--blue-android); }
 
-  .section-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--navy);
-  }
-  .section-subtitle {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-top: 4px;
-    line-height: 1.4;
-  }
+  /* ── Welcome Screen ── */
+  .welcome-content { display: flex; flex-direction: column; align-items: center; padding-top: 80px; }
+  .welcome-logo { width: 72px; height: 72px; border-radius: 22px; background: linear-gradient(135deg,var(--navy),var(--blue)); display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 800; margin-bottom: 24px; }
+  .welcome-title { font-size: 16px; color: var(--text-secondary); }
+  .welcome-brand { font-size: 36px; font-weight: 800; color: var(--navy); letter-spacing: -1px; margin-top: 4px; }
+  .welcome-tagline { font-size: 14px; color: var(--text-secondary); text-align: center; margin-top: 10px; line-height: 1.6; }
+  .welcome-actions { width: 100%; margin-top: 48px; display: flex; flex-direction: column; gap: 0; }
 
-  /* ── Back button ── */
-  .back-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--navy);
-    font-size: 14px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 0;
-  }
+  /* ── Sign Up ── */
+  .signup-header { margin-bottom: 24px; }
+  .signup-header h2 { font-size: 22px; font-weight: 700; color: var(--navy); }
+  .signup-header p { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
 
-  /* ════════════════════════════════════
-     SCREEN 1 — Welcome
-  ════════════════════════════════════ */
-  #screen-welcome { background: var(--bg); }
-  .welcome-logo {
-    width: 72px;
-    height: 72px;
-    background: linear-gradient(135deg, var(--amber), var(--blue));
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 34px;
-    font-weight: 800;
-    color: white;
-    margin: 0 auto;
-    box-shadow: 0 8px 24px rgba(37,99,235,0.3);
-  }
-  .welcome-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 80px;
-    gap: 0;
-  }
-  .welcome-title {
-    font-size: 16px;
-    color: var(--text-secondary);
-    margin-top: 24px;
-  }
-  .welcome-brand {
-    font-size: 38px;
-    font-weight: 800;
-    color: var(--blue);
-    letter-spacing: -1px;
-  }
-  .welcome-tagline {
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-top: 8px;
-    text-align: center;
-    line-height: 1.5;
-  }
-  .welcome-actions {
-    width: 100%;
-    margin-top: 60px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  /* ════════════════════════════════════
-     SCREEN 2 — Sign Up
-  ════════════════════════════════════ */
-  #screen-signup { background: var(--bg); }
-  .signup-header {
-    padding-top: 24px;
-    margin-bottom: 28px;
-  }
-  .signup-header h2 { font-size: 24px; font-weight: 700; color: var(--navy); }
-  .signup-header p  { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
-
-  /* ════════════════════════════════════
-     SCREEN 3 — Login
-  ════════════════════════════════════ */
-  #screen-login { background: var(--bg); }
-
-  /* ════════════════════════════════════
-     SCREEN 4 — Home
-  ════════════════════════════════════ */
-  #screen-home { background: var(--bg); }
-  .home-greeting {
-    padding-top: 28px;
-    margin-bottom: 28px;
-  }
+  /* ── Home ── */
+  .home-greeting { padding: 8px 0 16px; }
   .home-greeting-sub { font-size: 14px; color: var(--text-secondary); margin-top: 2px; }
-  .home-actions-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-bottom: 28px;
-  }
+  .home-actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
   .action-card {
-    height: 120px;
-    border-radius: 18px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
-    border: none;
-    color: white;
-    font-family: inherit;
+    height: 110px; border-radius: 16px; border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; transition: transform 0.1s, opacity 0.1s;
   }
-  .action-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
-  .action-card:active { transform: scale(0.97); }
-  .action-card.amber { background: linear-gradient(135deg, #F5A623, #e8920a); box-shadow: 0 4px 16px rgba(245,166,35,0.3); }
-  .action-card.blue  { background: linear-gradient(135deg, #2563EB, #1d4ed8); box-shadow: 0 4px 16px rgba(37,99,235,0.3); }
+  .action-card:hover { transform: scale(0.98); }
+  .action-card:active { transform: scale(0.96); }
+  .action-card.amber { background: var(--amber); }
+  .action-card.blue  { background: var(--blue);  }
   .action-card-icon { font-size: 28px; }
-  .action-card-label { font-size: 13px; font-weight: 600; }
+  .action-card-label { font-size: 13px; font-weight: 600; color: white; }
+  .recent-section-title { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 10px; }
+  .empty-card { background: white; border-radius: 14px; padding: 20px; text-align: center; font-size: 14px; color: var(--text-secondary); box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+  .section-title { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .section-subtitle { font-size: 14px; color: var(--text-secondary); }
 
-  .recent-section-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--navy);
-    margin-bottom: 12px;
-  }
-  .empty-card {
-    background: white;
-    border-radius: 16px;
-    padding: 24px;
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 14px;
-    border: 1.5px dashed var(--border);
-  }
-
-  /* ════════════════════════════════════
-     SCREEN 5 — Send Parcel
-  ════════════════════════════════════ */
-  #screen-send { background: var(--bg); }
-
-  .nav-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 0 20px;
-  }
-  .nav-title { font-size: 18px; font-weight: 700; color: var(--navy); }
-
-  .step-bar {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 28px;
-  }
-  .step-dot {
-    flex: 1;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--border);
-    transition: background 0.3s;
-  }
+  /* ── Step Indicators ── */
+  .step-bar { display: flex; gap: 6px; margin: 12px 0 24px; }
+  .step-dot { flex: 1; height: 4px; border-radius: 2px; background: rgba(0,0,0,0.1); transition: background 0.3s; }
   .step-dot.active { background: var(--amber); }
 
-  /* ════════════════════════════════════
-     SCREEN 6 — Track Delivery
-  ════════════════════════════════════ */
-  #screen-track { background: var(--bg); }
-
-  .tracking-card {
-    background: white;
-    border-radius: 18px;
-    padding: 20px;
-    margin-top: 20px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  }
-  .tracking-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  .status-badge {
-    background: rgba(37,99,235,0.1);
-    color: var(--blue);
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 100px;
-  }
-  .tracking-info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-top: 1px solid var(--border);
-  }
-  .tracking-info-row:first-child { border-top: none; }
+  /* ── Tracking ── */
+  .tracking-card { background: white; border-radius: 16px; padding: 18px; margin-top: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+  .tracking-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .tracking-info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
   .tracking-label { font-size: 13px; color: var(--text-secondary); }
   .tracking-value { font-size: 13px; font-weight: 600; color: var(--navy); }
-
-  .timeline-title {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--navy);
-    margin-top: 16px;
-    margin-bottom: 12px;
-    border-top: 1px solid var(--border);
-    padding-top: 16px;
-  }
-  .timeline-event {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    margin-bottom: 14px;
-  }
-  .timeline-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--amber);
-    margin-top: 3px;
-    flex-shrink: 0;
-  }
+  .status-badge { background: rgba(37,99,235,0.1); color: var(--blue); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+  .timeline-title { font-size: 13px; font-weight: 700; color: var(--navy); margin: 14px 0 10px; }
+  .timeline-event { display: flex; gap: 10px; margin-bottom: 12px; }
+  .timeline-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--amber); flex-shrink: 0; margin-top: 3px; }
   .timeline-status { font-size: 13px; font-weight: 600; color: var(--navy); }
-  .timeline-desc   { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
-  .timeline-time   { font-size: 11px; color: var(--text-secondary); opacity: 0.7; }
+  .timeline-desc { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+  .timeline-time { font-size: 11px; color: var(--text-secondary); opacity: 0.7; margin-top: 1px; }
 
-  /* ════════════════════════════════════
-     Navigation dots
-  ════════════════════════════════════ */
-  .nav-dots {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-  }
-  .nav-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.3);
-    transition: background 0.3s, transform 0.3s;
-    cursor: pointer;
-  }
-  .nav-dot.active {
-    background: white;
-    transform: scale(1.3);
+  /* ── Android Material Card ── */
+  .material-card {
+    background: white; border-radius: 12px; padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 12px;
   }
 
-  /* ── Screen labels ── */
+  /* Android option row */
+  .option-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border: 1.5px solid var(--border);
+    border-radius: 10px; cursor: pointer; margin-bottom: 10px;
+    background: white; transition: border-color 0.15s, background 0.15s;
+  }
+  .option-row.selected { border-color: var(--blue-android); background: rgba(74,108,247,0.04); }
+  .option-row.selected-amber { border-color: var(--amber); background: rgba(245,166,35,0.04); }
+  .option-row-left { display: flex; align-items: center; gap: 12px; }
+  .option-check { width: 20px; height: 20px; border-radius: 50%; background: var(--blue-android); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .option-check-amber { width: 20px; height: 20px; border-radius: 50%; background: var(--amber); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* Android detail row */
+  .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .detail-label { font-size: 13px; color: var(--text-secondary); }
+  .detail-value { font-size: 13px; font-weight: 600; color: var(--navy); text-align: right; }
+
+  /* Driver assignment */
+  .driver-avatar { width: 56px; height: 56px; border-radius: 50%; background: rgba(245,166,35,0.15); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .driver-pulse { width: 100px; height: 100px; border-radius: 50%; background: rgba(74,108,247,0.1); display: flex; align-items: center; justify-content: center; font-size: 40px; animation: pulse 1.2s ease-in-out infinite; margin: 20px auto; }
+  @keyframes pulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.12); opacity: 0.8; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Screen Labels / Nav Pills ── */
   .screen-labels {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: 500px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center; max-width: 340px;
   }
   .screen-label {
-    padding: 6px 14px;
-    border-radius: 100px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    border: 1.5px solid rgba(255,255,255,0.2);
-    color: rgba(255,255,255,0.6);
-    background: rgba(255,255,255,0.05);
-    transition: all 0.2s;
+    padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    color: rgba(255,255,255,0.5); cursor: pointer; background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s;
   }
-  .screen-label:hover { background: rgba(255,255,255,0.12); color: white; }
-  .screen-label.active { background: rgba(255,255,255,0.2); color: white; border-color: rgba(255,255,255,0.5); }
+  .screen-label:hover { color: white; background: rgba(255,255,255,0.12); }
+  .screen-label.active { color: white; background: rgba(245,166,35,0.25); border-color: rgba(245,166,35,0.4); }
 
-  /* ── Pill notification ── */
-  .demo-badge {
-    background: rgba(245,166,35,0.15);
-    border: 1px solid rgba(245,166,35,0.4);
-    color: #F5A623;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 100px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+  /* ── FAB-style mini badge ── */
+  .amount-card {
+    background: var(--blue-android); border-radius: 14px; padding: 18px;
+    text-align: center; margin-bottom: 16px;
   }
 </style>
 </head>
@@ -497,359 +348,646 @@
 
 <div class="demo-header">
   <div class="demo-badge">✦ Interactive Prototype</div>
-  <h1 style="margin-top:12px;">WayDrop iOS</h1>
-  <p>Tap through the complete user journey · Ghana's parcel delivery app</p>
+  <h1 style="margin-top:12px;">WayDrop</h1>
+  <p>iOS &amp; Android · Ghana's parcel delivery app · Tap to explore</p>
 </div>
 
-<!-- Phone -->
-<div class="phone">
-  <div class="dynamic-island"></div>
-  <div class="phone-inner">
+<div class="phones-row">
 
-    <!-- ═══════════ SCREEN 1: WELCOME ═══════════ -->
-    <div class="screen active" id="screen-welcome">
-      <div class="status-bar">
-        <span>9:41</span>
-        <div class="status-bar-icons">
-          <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="1" fill="currentColor" opacity=".4"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="currentColor" opacity=".6"/><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/><rect x="14" y="1" width="2.5" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1"/></svg>
-          <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.5C10.5 2.5 12.7 3.6 14.2 5.3L15.5 4C13.6 1.9 11 0.5 8 0.5C5 0.5 2.4 1.9 0.5 4L1.8 5.3C3.3 3.6 5.5 2.5 8 2.5Z" fill="currentColor"/><path d="M8 5.5C9.7 5.5 11.2 6.2 12.3 7.3L13.6 6C12.1 4.5 10.2 3.5 8 3.5C5.8 3.5 3.9 4.5 2.4 6L3.7 7.3C4.8 6.2 6.3 5.5 8 5.5Z" fill="currentColor"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/></svg>
-          <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="1.5" y="2.5" width="16" height="7" rx="2" fill="currentColor"/><rect x="22.5" y="3.5" width="2" height="5" rx="1" fill="currentColor" opacity=".4"/></svg>
-        </div>
-      </div>
-      <div class="screen-content">
-        <div class="welcome-content">
-          <div class="welcome-logo">W</div>
-          <p class="welcome-title">Welcome to</p>
-          <p class="welcome-brand">WayDrop</p>
-          <p class="welcome-tagline">Fast, reliable parcel delivery<br>across Accra and beyond.</p>
-          <div class="welcome-actions">
-            <button class="btn-primary" onclick="goto('signup')">Sign Up</button>
-            <button class="btn-secondary" onclick="goto('login')">Log In</button>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- ════════════════════════════════════════════════
+       iOS PHONE
+  ═════════════════════════════════════════════════ -->
+  <div class="phone-section">
+    <div class="platform-label">📱 iOS</div>
+    <div class="phone">
+      <div class="dynamic-island"></div>
+      <div class="phone-inner">
 
-    <!-- ═══════════ SCREEN 2: SIGN UP ═══════════ -->
-    <div class="screen" id="screen-signup">
-      <div class="status-bar"><span>9:41</span><div class="status-bar-icons"><svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="1" fill="currentColor" opacity=".4"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="currentColor" opacity=".6"/><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg></div></div>
-      <div class="screen-content">
-        <div class="nav-bar">
-          <button class="back-btn" onclick="goto('welcome')">
-            <svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-          </button>
-          <span class="nav-title">Create Account</span>
-        </div>
-        <div class="signup-header">
-          <h2>Join WayDrop 🇬🇭</h2>
-          <p>Send parcels anywhere in Accra today</p>
-        </div>
-        <div class="field-group">
-          <div>
-            <label class="field-label">Full Name</label>
-            <input class="text-field" type="text" value="Kwame Mensah" placeholder="Full name">
-          </div>
-          <div>
-            <label class="field-label">Email Address</label>
-            <input class="text-field" type="email" value="kwame@gmail.com" placeholder="Email">
-          </div>
-          <div>
-            <label class="field-label">Phone Number</label>
-            <input class="text-field" type="tel" value="+233 24 123 4567" placeholder="+233...">
-          </div>
-          <div>
-            <label class="field-label">Password</label>
-            <input class="text-field" type="password" value="••••••••" placeholder="Min 8 characters">
-          </div>
-        </div>
-        <div style="margin-top:28px;">
-          <button class="btn-primary" onclick="goto('home')">Create Account</button>
-          <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin-top:16px;">
-            Already have an account? <span style="color:var(--blue);cursor:pointer;font-weight:600;" onclick="goto('login')">Log in</span>
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════ SCREEN 3: LOGIN ═══════════ -->
-    <div class="screen" id="screen-login">
-      <div class="status-bar"><span>9:41</span><div class="status-bar-icons"><svg width="17" height="12" viewBox="0 0 17 12"><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg></div></div>
-      <div class="screen-content">
-        <div class="nav-bar">
-          <button class="back-btn" onclick="goto('welcome')">
-            <svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-          </button>
-          <span class="nav-title">Welcome back</span>
-        </div>
-        <div style="margin-bottom:28px;">
-          <h2 style="font-size:24px;font-weight:700;color:var(--navy);">Sign in to WayDrop</h2>
-          <p style="font-size:14px;color:var(--text-secondary);margin-top:4px;">Enter your credentials to continue</p>
-        </div>
-        <div class="field-group">
-          <div>
-            <label class="field-label">Email Address</label>
-            <input class="text-field" type="email" value="kwame@gmail.com" placeholder="Email">
-          </div>
-          <div>
-            <label class="field-label">Password</label>
-            <input class="text-field" type="password" value="••••••••" placeholder="Password">
-          </div>
-        </div>
-        <div style="margin-top:32px;">
-          <button class="btn-primary" onclick="goto('home')">Sign In</button>
-          <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin-top:16px;">
-            No account? <span style="color:var(--blue);cursor:pointer;font-weight:600;" onclick="goto('signup')">Sign up free</span>
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════ SCREEN 4: HOME ═══════════ -->
-    <div class="screen" id="screen-home">
-      <div class="status-bar"><span>9:41</span><div class="status-bar-icons"><svg width="17" height="12" viewBox="0 0 17 12"><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg></div></div>
-      <div class="screen-content">
-        <div class="home-greeting">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div>
-              <h2 class="section-title">Hello, Kwame 👋</h2>
-              <p class="home-greeting-sub">What would you like to do?</p>
-            </div>
-            <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--blue));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;">K</div>
-          </div>
-        </div>
-        <div class="home-actions-grid">
-          <button class="action-card amber" onclick="goto('send')">
-            <div class="action-card-icon">📦</div>
-            <div class="action-card-label">Send a Parcel</div>
-          </button>
-          <button class="action-card blue" onclick="goto('track')">
-            <div class="action-card-icon">🛵</div>
-            <div class="action-card-label">Track Delivery</div>
-          </button>
-        </div>
-        <p class="recent-section-title">Recent Deliveries</p>
-        <div class="empty-card">
-          <div style="font-size:28px;margin-bottom:8px;">📬</div>
-          No deliveries yet. Send your first parcel!
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════ SCREEN 5: SEND PARCEL ═══════════ -->
-    <div class="screen" id="screen-send">
-      <div class="status-bar"><span>9:41</span><div class="status-bar-icons"><svg width="17" height="12" viewBox="0 0 17 12"><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg></div></div>
-      <div class="screen-content">
-        <div class="nav-bar">
-          <button class="back-btn" onclick="goto('home')">
-            <svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-          </button>
-          <span class="nav-title" id="send-step-title">Send a Parcel</span>
-        </div>
-        <div class="step-bar">
-          <div class="step-dot active" id="sdot-0"></div>
-          <div class="step-dot" id="sdot-1"></div>
-          <div class="step-dot" id="sdot-2"></div>
-          <div class="step-dot" id="sdot-3"></div>
-        </div>
-        <!-- Step 0: Address -->
-        <div id="send-step-0">
-          <h3 class="section-title">Where is it going?</h3>
-          <p class="section-subtitle" style="margin-bottom:20px;">Enter pickup and drop-off addresses in Accra.</p>
-          <div class="field-group">
-            <div>
-              <label class="field-label">📍 Pickup address</label>
-              <input class="text-field" type="text" value="East Legon, Accra" placeholder="Pickup address">
-            </div>
-            <div>
-              <label class="field-label">🏁 Drop-off address</label>
-              <input class="text-field" type="text" value="Osu, Oxford Street" placeholder="Drop-off address">
+        <!-- SCREEN: WELCOME -->
+        <div class="screen active" id="screen-welcome">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"><svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="1" fill="currentColor" opacity=".4"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="currentColor" opacity=".6"/><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg></div></div>
+          <div class="screen-content">
+            <div class="welcome-content">
+              <div class="welcome-logo">W</div>
+              <p class="welcome-title">Welcome to</p>
+              <p class="welcome-brand">WayDrop</p>
+              <p class="welcome-tagline">Fast, reliable parcel delivery<br>across Accra and beyond.</p>
+              <div class="welcome-actions">
+                <button class="btn-primary" onclick="goto('signup')">Sign Up</button>
+                <button class="btn-secondary" onclick="goto('login')">Log In</button>
+              </div>
             </div>
           </div>
-          <div style="margin-top:28px;"><button class="btn-primary" onclick="sendStep(1)">Next</button></div>
         </div>
-        <!-- Step 1: Details -->
-        <div id="send-step-1" style="display:none;">
-          <h3 class="section-title">What are you sending?</h3>
-          <p class="section-subtitle" style="margin-bottom:20px;">Describe the parcel contents briefly.</p>
-          <div>
-            <label class="field-label">📝 Description</label>
-            <input class="text-field" type="text" value="Books and clothing" placeholder="e.g. books, clothing...">
+
+        <!-- SCREEN: SIGN UP -->
+        <div class="screen" id="screen-signup">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content">
+            <div class="nav-bar">
+              <button class="back-btn" onclick="goto('welcome')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+              <span class="nav-title">Create Account</span>
+            </div>
+            <div class="signup-header"><h2>Join WayDrop 🇬🇭</h2><p>Send parcels anywhere in Accra today</p></div>
+            <div class="field-group">
+              <div><label class="field-label">Full Name</label><input class="text-field" type="text" value="Kwame Mensah"></div>
+              <div><label class="field-label">Email Address</label><input class="text-field" type="email" value="kwame@gmail.com"></div>
+              <div><label class="field-label">Phone Number</label><input class="text-field" type="tel" value="+233 24 123 4567"></div>
+              <div><label class="field-label">Password</label><input class="text-field" type="password" value="••••••••"></div>
+            </div>
+            <div style="margin-top:28px;">
+              <button class="btn-primary" onclick="goto('home')">Create Account</button>
+              <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin-top:16px;">Already have an account? <span style="color:var(--blue);cursor:pointer;font-weight:600;" onclick="goto('login')">Log in</span></p>
+            </div>
           </div>
-          <div style="margin-top:28px;"><button class="btn-primary" onclick="sendStep(2)">Next</button></div>
         </div>
-        <!-- Step 2: Dimensions -->
-        <div id="send-step-2" style="display:none;">
-          <h3 class="section-title">Parcel dimensions</h3>
-          <p class="section-subtitle" style="margin-bottom:20px;">Size in cm and weight in kg.</p>
-          <div class="field-group">
+
+        <!-- SCREEN: LOGIN -->
+        <div class="screen" id="screen-login">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content">
+            <div class="nav-bar">
+              <button class="back-btn" onclick="goto('welcome')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
+              <span class="nav-title">Welcome back</span>
+            </div>
+            <div style="margin-bottom:28px;"><h2 style="font-size:24px;font-weight:700;color:var(--navy);">Sign in to WayDrop</h2><p style="font-size:14px;color:var(--text-secondary);margin-top:4px;">Enter your credentials to continue</p></div>
+            <div class="field-group">
+              <div><label class="field-label">Email Address</label><input class="text-field" type="email" value="kwame@gmail.com"></div>
+              <div><label class="field-label">Password</label><input class="text-field" type="password" value="••••••••"></div>
+            </div>
+            <div style="margin-top:32px;">
+              <button class="btn-primary" onclick="goto('home')">Sign In</button>
+              <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin-top:16px;">No account? <span style="color:var(--blue);cursor:pointer;font-weight:600;" onclick="goto('signup')">Sign up free</span></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN: HOME -->
+        <div class="screen" id="screen-home">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content">
+            <div class="home-greeting">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div><h2 class="section-title">Hello, Kwame 👋</h2><p class="home-greeting-sub">What would you like to do?</p></div>
+                <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--blue));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;">K</div>
+              </div>
+            </div>
+            <div class="home-actions-grid">
+              <button class="action-card amber" onclick="goto('send')"><div class="action-card-icon">📦</div><div class="action-card-label">Send a Parcel</div></button>
+              <button class="action-card blue" onclick="goto('track')"><div class="action-card-icon">🛵</div><div class="action-card-label">Track Delivery</div></button>
+            </div>
+            <p class="recent-section-title">Recent Deliveries</p>
+            <div class="empty-card"><div style="font-size:28px;margin-bottom:8px;">📬</div>No deliveries yet. Send your first parcel!</div>
+          </div>
+        </div>
+
+        <!-- SCREEN: SEND PARCEL -->
+        <div class="screen" id="screen-send">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content">
+            <div class="nav-bar"><button class="back-btn" onclick="goto('home')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="nav-title" id="send-step-title">Send a Parcel</span></div>
+            <div class="step-bar"><div class="step-dot active" id="sdot-0"></div><div class="step-dot" id="sdot-1"></div><div class="step-dot" id="sdot-2"></div><div class="step-dot" id="sdot-3"></div></div>
+            <div id="send-step-0">
+              <h3 class="section-title">Where is it going?</h3><p class="section-subtitle" style="margin-bottom:20px;">Enter pickup and drop-off addresses in Accra.</p>
+              <div class="field-group"><div><label class="field-label">📍 Pickup address</label><input class="text-field" value="East Legon, Accra"></div><div><label class="field-label">🏁 Drop-off address</label><input class="text-field" value="Osu, Oxford Street"></div></div>
+              <div style="margin-top:28px;"><button class="btn-primary" onclick="sendStep(1)">Next</button></div>
+            </div>
+            <div id="send-step-1" style="display:none;">
+              <h3 class="section-title">What are you sending?</h3><p class="section-subtitle" style="margin-bottom:20px;">Describe the parcel contents briefly.</p>
+              <div><label class="field-label">📝 Description</label><input class="text-field" value="Books and clothing"></div>
+              <div style="margin-top:28px;"><button class="btn-primary" onclick="sendStep(2)">Next</button></div>
+            </div>
+            <div id="send-step-2" style="display:none;">
+              <h3 class="section-title">Parcel dimensions</h3><p class="section-subtitle" style="margin-bottom:20px;">Size in cm and weight in kg.</p>
+              <div class="field-group">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label class="field-label">Length (cm)</label><input class="text-field" value="30" type="number"></div><div><label class="field-label">Width (cm)</label><input class="text-field" value="20" type="number"></div></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label class="field-label">Height (cm)</label><input class="text-field" value="15" type="number"></div><div><label class="field-label">Weight (kg)</label><input class="text-field" value="2.5" type="number"></div></div>
+              </div>
+              <div style="margin-top:28px;"><button class="btn-primary" onclick="sendStep(3)">Next</button></div>
+            </div>
+            <div id="send-step-3" style="display:none;">
+              <h3 class="section-title">Review your parcel</h3>
+              <div style="background:white;border-radius:16px;padding:20px;margin-top:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+                <div class="tracking-info-row" style="border:none;padding-top:0;"><span class="tracking-label">From</span><span class="tracking-value">East Legon, Accra</span></div>
+                <div class="tracking-info-row"><span class="tracking-label">To</span><span class="tracking-value">Osu, Oxford Street</span></div>
+                <div class="tracking-info-row"><span class="tracking-label">Contents</span><span class="tracking-value">Books and clothing</span></div>
+                <div class="tracking-info-row"><span class="tracking-label">Size</span><span class="tracking-value">30 × 20 × 15 cm</span></div>
+                <div class="tracking-info-row"><span class="tracking-label">Weight</span><span class="tracking-value">2.5 kg</span></div>
+                <div class="tracking-info-row"><span class="tracking-label">Estimated cost</span><span class="tracking-value" style="color:var(--amber);font-weight:700;">GHS 25.00</span></div>
+              </div>
+              <div style="margin-top:24px;"><button class="btn-primary" onclick="showSuccess()">✓ Confirm &amp; Send</button></div>
+            </div>
+            <div id="send-success" style="display:none;text-align:center;padding-top:40px;">
+              <div style="font-size:64px;">🎉</div>
+              <h3 style="font-size:22px;font-weight:700;color:var(--navy);margin-top:16px;">Parcel Submitted!</h3>
+              <p style="font-size:14px;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Your parcel is being processed.<br>You'll receive updates shortly.</p>
+              <div style="background:var(--green-light);border-radius:12px;padding:16px;margin-top:20px;"><p style="font-size:13px;font-weight:600;color:#065F46;">Parcel ID: WD-20240628-0042</p></div>
+              <button class="btn-blue" style="margin-top:24px;" onclick="goto('home')">Back to Home</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN: TRACK -->
+        <div class="screen" id="screen-track">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content">
+            <div class="nav-bar"><button class="back-btn" onclick="goto('home')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="nav-title">Track Delivery</span></div>
+            <div><label class="field-label">Delivery ID</label><input class="text-field" value="WD-20240628-0038"></div>
+            <button class="btn-blue" style="margin-top:14px;" onclick="showTracking()">Track</button>
+            <div id="track-result" style="display:none;">
+              <div class="tracking-card">
+                <div class="tracking-header"><span style="font-size:15px;font-weight:700;color:var(--navy);">WD-20240628-0038</span><span class="status-badge">In Transit</span></div>
+                <div class="tracking-info-row"><span class="tracking-label">Method</span><span class="tracking-value">🛵 Motorbike</span></div>
+                <div class="tracking-info-row"><span class="tracking-label">Driver</span><span class="tracking-value">Ama Boateng</span></div>
+                <div class="tracking-info-row"><span class="tracking-label">ETA</span><span class="tracking-value" style="color:var(--success);">~8 minutes</span></div>
+                <p class="timeline-title">📍 Timeline</p>
+                <div class="timeline-event"><div class="timeline-dot"></div><div><div class="timeline-status">In Transit</div><div class="timeline-desc">Driver picked up your parcel</div><div class="timeline-time">9:15 AM · Today</div></div></div>
+                <div class="timeline-event"><div class="timeline-dot" style="background:var(--border);"></div><div><div class="timeline-status" style="color:var(--text-secondary);">Assigned</div><div class="timeline-desc">Driver Ama Boateng assigned</div><div class="timeline-time">9:02 AM · Today</div></div></div>
+                <div class="timeline-event" style="margin-bottom:0;"><div class="timeline-dot" style="background:var(--border);"></div><div><div class="timeline-status" style="color:var(--text-secondary);">Created</div><div class="timeline-desc">Parcel submitted successfully</div><div class="timeline-time">8:47 AM · Today</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /phone-inner -->
+    </div><!-- /phone -->
+
+    <div class="screen-labels">
+      <div class="screen-label active" id="lbl-welcome" onclick="goto('welcome')">Welcome</div>
+      <div class="screen-label" id="lbl-signup" onclick="goto('signup')">Sign Up</div>
+      <div class="screen-label" id="lbl-login" onclick="goto('login')">Login</div>
+      <div class="screen-label" id="lbl-home" onclick="goto('home')">Home</div>
+      <div class="screen-label" id="lbl-send" onclick="goto('send')">Send Parcel</div>
+      <div class="screen-label" id="lbl-track" onclick="goto('track')">Track</div>
+    </div>
+  </div><!-- /phone-section iOS -->
+
+
+  <!-- ════════════════════════════════════════════════
+       ANDROID PHONE
+  ═════════════════════════════════════════════════ -->
+  <div class="phone-section">
+    <div class="platform-label">🤖 Android</div>
+    <div class="android-phone">
+      <div class="android-notch"></div>
+      <div class="android-phone-inner">
+
+        <!-- A-SCREEN: WELCOME -->
+        <div class="android-screen active" id="ascreen-welcome">
+          <div class="android-status-bar"><span>9:41</span><span style="font-size:11px;">▲ ◉ ▐▐</span></div>
+          <div class="android-screen-content">
+            <div class="welcome-content" style="padding-top:60px;">
+              <div class="welcome-logo">W</div>
+              <p class="welcome-title">Welcome to</p>
+              <p class="welcome-brand">WayDrop</p>
+              <p class="welcome-tagline">Fast, reliable parcel delivery<br>across Accra and beyond.</p>
+              <div class="welcome-actions">
+                <button class="btn-material-amber" onclick="agoto('signup')">Sign Up</button>
+                <button class="btn-secondary" onclick="agoto('login')" style="border-radius:12px;margin-top:12px;">Log In</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- A-SCREEN: SIGN UP -->
+        <div class="android-screen" id="ascreen-signup">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content">
+            <div class="android-nav-bar"><button class="android-back-btn" onclick="agoto('welcome')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="android-nav-title">Create Account</span></div>
+            <div style="margin-bottom:20px;"><h2 style="font-size:22px;font-weight:700;color:var(--navy);">Join WayDrop 🇬🇭</h2><p style="font-size:14px;color:var(--text-secondary);margin-top:4px;">Send parcels anywhere in Accra today</p></div>
+            <div class="field-group">
+              <div><label class="field-label">Full Name</label><input class="material-field" value="Kwame Mensah"></div>
+              <div><label class="field-label">Email Address</label><input class="material-field" value="kwame@gmail.com"></div>
+              <div><label class="field-label">Phone Number</label><input class="material-field" value="+233 24 123 4567"></div>
+              <div><label class="field-label">Password</label><input class="material-field" type="password" value="••••••••"></div>
+            </div>
+            <div style="margin-top:24px;">
+              <button class="btn-material-amber" onclick="agoto('idverify')">Create Account</button>
+              <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin-top:14px;">Already have an account? <span style="color:var(--blue-android);cursor:pointer;font-weight:600;" onclick="agoto('login')">Log in</span></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- A-SCREEN: LOGIN -->
+        <div class="android-screen" id="ascreen-login">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content">
+            <div class="android-nav-bar"><button class="android-back-btn" onclick="agoto('welcome')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="android-nav-title">Sign In</span></div>
+            <div style="margin-bottom:24px;"><h2 style="font-size:22px;font-weight:700;color:var(--navy);">Welcome back</h2><p style="font-size:14px;color:var(--text-secondary);margin-top:4px;">Enter your credentials to continue</p></div>
+            <div class="field-group">
+              <div><label class="field-label">Email Address</label><input class="material-field" value="kwame@gmail.com"></div>
+              <div><label class="field-label">Password</label><input class="material-field" type="password" value="••••••••"></div>
+            </div>
+            <div style="margin-top:24px;">
+              <button class="btn-material" onclick="agoto('home')">Sign In</button>
+              <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin-top:14px;">No account? <span style="color:var(--blue-android);cursor:pointer;font-weight:600;" onclick="agoto('signup')">Sign up free</span></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- A-SCREEN: ID VERIFICATION -->
+        <div class="android-screen" id="ascreen-idverify">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content">
+            <div class="android-nav-bar"><span class="android-nav-title">Verify Identity</span></div>
+            <div style="text-align:center;padding:16px 0 24px;">
+              <div style="font-size:48px;margin-bottom:12px;">🪪</div>
+              <h2 style="font-size:20px;font-weight:700;color:var(--navy);">Verify Your Identity</h2>
+              <p style="font-size:13px;color:var(--text-secondary);margin-top:6px;">Select a valid Ghanaian document</p>
+            </div>
+            <div id="id-options">
+              <div class="option-row" id="idopt-0" onclick="selectDoc(0)"><div class="option-row-left"><span style="font-size:20px;">🪪</span><span style="font-size:14px;font-weight:500;color:var(--navy);">Ghana Card (NIA)</span></div></div>
+              <div class="option-row" id="idopt-1" onclick="selectDoc(1)"><div class="option-row-left"><span style="font-size:20px;">📒</span><span style="font-size:14px;font-weight:500;color:var(--navy);">Passport</span></div></div>
+              <div class="option-row" id="idopt-2" onclick="selectDoc(2)"><div class="option-row-left"><span style="font-size:20px;">🚗</span><span style="font-size:14px;font-weight:500;color:var(--navy);">Driver's License</span></div></div>
+              <div class="option-row" id="idopt-3" onclick="selectDoc(3)"><div class="option-row-left"><span style="font-size:20px;">🗳️</span><span style="font-size:14px;font-weight:500;color:var(--navy);">Voter's ID</span></div></div>
+            </div>
+            <div style="margin-top:20px;"><button class="btn-material" id="idverify-btn" onclick="agoto('home')" style="opacity:0.4;" disabled>Continue</button></div>
+          </div>
+        </div>
+
+        <!-- A-SCREEN: HOME -->
+        <div class="android-screen" id="ascreen-home">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 16px;">
+              <div><p style="font-size:20px;font-weight:700;color:var(--navy);">WayDrop</p><p style="font-size:13px;color:var(--text-secondary);">What would you like to do?</p></div>
+              <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--blue-android));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:15px;">K</div>
+            </div>
+            <div class="home-actions-grid">
+              <button class="action-card" style="background:var(--amber);border-radius:14px;" onclick="agoto('addparcel')"><div class="action-card-icon">📦</div><div class="action-card-label">Send a Parcel</div></button>
+              <button class="action-card" style="background:var(--blue-android);border-radius:14px;" onclick="agoto('track')"><div class="action-card-icon">🛵</div><div class="action-card-label">Track Delivery</div></button>
+            </div>
+            <p class="recent-section-title">Recent Deliveries</p>
+            <div class="material-card" style="text-align:center;padding:20px;"><div style="font-size:24px;margin-bottom:8px;">📬</div><p style="font-size:13px;color:var(--text-secondary);">No deliveries yet. Send your first parcel!</p></div>
+          </div>
+        </div>
+
+        <!-- A-SCREEN: ADD PARCEL -->
+        <div class="android-screen" id="ascreen-addparcel">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content">
+            <div class="android-nav-bar"><button class="android-back-btn" onclick="agoto('home')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="android-nav-title" id="aparcel-title">Send a Parcel</span></div>
+            <div class="step-bar"><div class="step-dot active" id="adot-0"></div><div class="step-dot" id="adot-1"></div></div>
+            <div id="aparcel-step-0">
+              <h3 style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px;">Where is it going?</h3>
+              <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">Enter pickup and drop-off addresses in Accra.</p>
+              <div class="field-group">
+                <div><label class="field-label">📍 Pickup address</label><input class="material-field" value="East Legon, Accra"></div>
+                <div><label class="field-label">🏁 Drop-off address</label><input class="material-field" value="Osu, Oxford Street"></div>
+              </div>
+              <div style="margin-top:24px;"><button class="btn-material-amber" onclick="aparcelStep(1)">Next</button></div>
+            </div>
+            <div id="aparcel-step-1" style="display:none;">
+              <h3 style="font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px;">What are you sending?</h3>
+              <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">Describe the parcel contents briefly.</p>
+              <div><label class="field-label">📝 Description</label><input class="material-field" value="Books and clothing"></div>
+              <div style="margin-top:24px;"><button class="btn-material-amber" onclick="agoto('parcelverify')">Next</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- A-SCREEN: PARCEL VERIFICATION -->
+        <div class="android-screen" id="ascreen-parcelverify">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content">
+            <div class="android-nav-bar"><button class="android-back-btn" onclick="agoto('addparcel')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="android-nav-title">Add a Parcel</span></div>
+            <div id="pv-camera" class="material-card" style="height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:2px dashed var(--border);" onclick="pvTakePhoto()">
+              <div style="font-size:36px;">📷</div>
+              <p style="font-size:13px;color:var(--text-secondary);margin-top:8px;" id="pv-camera-label">Tap to take photo</p>
+            </div>
+            <div class="material-card" style="margin-top:12px;">
+              <p style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:10px;">Audio Instructions</p>
+              <div id="pv-mic" style="text-align:center;">
+                <button onclick="pvToggleMic()" style="width:48px;height:48px;border-radius:50%;border:none;background:rgba(74,108,247,0.1);cursor:pointer;font-size:24px;">🎤</button>
+                <p style="font-size:11px;color:var(--text-secondary);margin-top:6px;" id="pv-mic-label">Tap to record audio</p>
+              </div>
+            </div>
+            <div style="margin-top:16px;"><button class="btn-material-amber" id="pv-continue" onclick="agoto('parceldims')" style="opacity:0.4;" disabled>Continue</button></div>
+          </div>
+        </div>
+
+        <!-- A-SCREEN: PARCEL DIMENSIONS -->
+        <div class="android-screen" id="ascreen-parceldims">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content">
+            <div class="android-nav-bar"><button class="android-back-btn" onclick="agoto('parcelverify')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="android-nav-title">Parcel Dimensions</span></div>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">Enter size in cm and weight in kg.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+              <div><label class="field-label">Length (cm)</label><input class="material-field" value="30" type="number"></div>
+              <div><label class="field-label">Width (cm)</label><input class="material-field" value="20" type="number"></div>
+            </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <div><label class="field-label">Length (cm)</label><input class="text-field" value="30" type="number"></div>
-              <div><label class="field-label">Width (cm)</label><input class="text-field" value="20" type="number"></div>
+              <div><label class="field-label">Height (cm)</label><input class="material-field" value="15" type="number"></div>
+              <div><label class="field-label">Weight (kg)</label><input class="material-field" value="2.5" type="number"></div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-              <div><label class="field-label">Height (cm)</label><input class="text-field" value="15" type="number"></div>
-              <div><label class="field-label">Weight (kg)</label><input class="text-field" value="2.5" type="number"></div>
+            <div style="margin-top:24px;"><button class="btn-material-amber" onclick="agoto('delivmethod')">Continue</button></div>
+          </div>
+        </div>
+
+        <!-- A-SCREEN: DELIVERY METHOD -->
+        <div class="android-screen" id="ascreen-delivmethod">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content">
+            <div class="android-nav-bar"><button class="android-back-btn" onclick="agoto('parceldims')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="android-nav-title">Delivery Method</span></div>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">How should we deliver your parcel?</p>
+            <div class="option-row" id="dm-0" onclick="selectMethod(0)"><div class="option-row-left"><span style="font-size:24px;">🛵</span><div><p style="font-size:14px;font-weight:600;color:var(--navy);">Motorbike</p><p style="font-size:12px;color:var(--text-secondary);">Fastest · GHS 15</p></div></div></div>
+            <div class="option-row" id="dm-1" onclick="selectMethod(1)"><div class="option-row-left"><span style="font-size:24px;">🚗</span><div><p style="font-size:14px;font-weight:600;color:var(--navy);">Car</p><p style="font-size:12px;color:var(--text-secondary);">Comfort · GHS 25</p></div></div></div>
+            <div class="option-row" id="dm-2" onclick="selectMethod(2)"><div class="option-row-left"><span style="font-size:24px;">🚌</span><div><p style="font-size:14px;font-weight:600;color:var(--navy);">Tro-Tro</p><p style="font-size:12px;color:var(--text-secondary);">Economical · GHS 8</p></div></div></div>
+            <div style="margin-top:16px;"><button class="btn-material-amber" id="dm-btn" onclick="agoto('payment')" style="opacity:0.4;" disabled>Continue</button></div>
+          </div>
+        </div>
+
+        <!-- A-SCREEN: PAYMENT -->
+        <div class="android-screen" id="ascreen-payment">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content">
+            <div class="android-nav-bar"><button class="android-back-btn" onclick="agoto('delivmethod')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="android-nav-title">Payment</span></div>
+            <div class="amount-card"><p style="font-size:13px;color:rgba(255,255,255,0.7);">Total Amount</p><p style="font-size:32px;font-weight:700;color:white;margin-top:4px;">GHS 25.00</p></div>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">Choose payment method:</p>
+            <div class="option-row" id="pay-0" onclick="selectPayment(0)"><div class="option-row-left"><span style="font-size:22px;">📱</span><span style="font-size:14px;font-weight:500;color:var(--navy);">MTN MoMo</span></div></div>
+            <div class="option-row" id="pay-1" onclick="selectPayment(1)"><div class="option-row-left"><span style="font-size:22px;">📲</span><span style="font-size:14px;font-weight:500;color:var(--navy);">Vodafone Cash</span></div></div>
+            <div class="option-row" id="pay-2" onclick="selectPayment(2)"><div class="option-row-left"><span style="font-size:22px;">💳</span><span style="font-size:14px;font-weight:500;color:var(--navy);">AirtelTigo Money</span></div></div>
+            <div style="margin-top:12px;"><label class="field-label">Mobile Money Number</label><input class="material-field" value="+233 24 123 4567"></div>
+            <div style="margin-top:16px;"><button class="btn-material-amber" id="pay-btn" onclick="agoto('driverassign')" style="opacity:0.4;" disabled>Pay GHS 25.00</button></div>
+          </div>
+        </div>
+
+        <!-- A-SCREEN: DRIVER ASSIGNMENT -->
+        <div class="android-screen" id="ascreen-driverassign">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100% - 40px);">
+            <div id="da-searching" style="text-align:center;">
+              <div class="driver-pulse">🛵</div>
+              <h3 style="font-size:20px;font-weight:700;color:var(--navy);">Finding your driver...</h3>
+              <p style="font-size:13px;color:var(--text-secondary);margin-top:8px;">Looking for the nearest available driver in Accra</p>
+              <div style="margin-top:20px;"><div style="width:36px;height:36px;border:3px solid var(--blue-android);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin:auto;"></div></div>
+            </div>
+            <div id="da-found" style="display:none;text-align:center;width:100%;">
+              <p style="font-size:22px;font-weight:700;color:var(--navy);">Driver Assigned! 🎉</p>
+              <div class="material-card" style="margin-top:20px;text-align:left;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;"><div class="driver-avatar">🧑</div><div><p style="font-size:17px;font-weight:600;color:var(--navy);">Ama Boateng</p><p style="font-size:13px;color:var(--amber);">⭐ 4.8</p></div></div>
+                <div class="detail-row"><span class="detail-label">Vehicle</span><span class="detail-value">Motorbike · GR-2847-22</span></div>
+                <div class="detail-row" style="border:none;"><span class="detail-label">ETA</span><span class="detail-value" style="color:var(--success);">~8 minutes</span></div>
+              </div>
+              <button class="btn-material" style="margin-top:16px;" onclick="agoto('delivdetails')">View Delivery Details</button>
             </div>
           </div>
-          <div style="margin-top:28px;"><button class="btn-primary" onclick="sendStep(3)">Next</button></div>
         </div>
-        <!-- Step 3: Confirm -->
-        <div id="send-step-3" style="display:none;">
-          <h3 class="section-title">Review your parcel</h3>
-          <div style="background:white;border-radius:16px;padding:20px;margin-top:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
-            <div class="tracking-info-row" style="border:none;padding-top:0;"><span class="tracking-label">From</span><span class="tracking-value">East Legon, Accra</span></div>
-            <div class="tracking-info-row"><span class="tracking-label">To</span><span class="tracking-value">Osu, Oxford Street</span></div>
-            <div class="tracking-info-row"><span class="tracking-label">Contents</span><span class="tracking-value">Books and clothing</span></div>
-            <div class="tracking-info-row"><span class="tracking-label">Size</span><span class="tracking-value">30 × 20 × 15 cm</span></div>
-            <div class="tracking-info-row"><span class="tracking-label">Weight</span><span class="tracking-value">2.5 kg</span></div>
-            <div class="tracking-info-row"><span class="tracking-label">Estimated cost</span><span class="tracking-value" style="color:var(--amber);font-weight:700;">GHS 25.00</span></div>
+
+        <!-- A-SCREEN: DELIVERY DETAILS -->
+        <div class="android-screen" id="ascreen-delivdetails">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content">
+            <div class="android-nav-bar"><span class="android-nav-title">Delivery Details</span></div>
+            <div class="material-card" style="background:rgba(74,108,247,0.08);border:none;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <span style="font-size:13px;color:var(--text-secondary);">Status</span>
+              <span style="background:var(--blue-android);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">IN TRANSIT</span>
+            </div>
+            <div class="material-card">
+              <div class="detail-row"><span class="detail-label">📍 Pickup</span><span class="detail-value">East Legon, Accra</span></div>
+              <div class="detail-row"><span class="detail-label">🏁 Drop-off</span><span class="detail-value">Osu, Oxford Street</span></div>
+              <div class="detail-row"><span class="detail-label">🛵 Driver</span><span class="detail-value">Ama Boateng</span></div>
+              <div class="detail-row"><span class="detail-label">🆔 Delivery ID</span><span class="detail-value">WD-20240628-0042</span></div>
+              <div class="detail-row" style="border:none;"><span class="detail-label">⏱ ETA</span><span class="detail-value" style="color:var(--success);">~8 minutes</span></div>
+            </div>
+            <p style="font-size:14px;font-weight:600;color:var(--navy);margin:12px 0 8px;">Timeline</p>
+            <div class="material-card">
+              <div class="timeline-event"><div class="timeline-dot"></div><div><div class="timeline-status">In Transit</div><div class="timeline-desc">Driver picked up your parcel</div><div class="timeline-time">9:15 AM · Today</div></div></div>
+              <div class="timeline-event"><div class="timeline-dot" style="background:var(--border);"></div><div><div class="timeline-status" style="color:var(--text-secondary);">Assigned</div><div class="timeline-desc">Driver Ama Boateng assigned</div><div class="timeline-time">9:02 AM · Today</div></div></div>
+              <div class="timeline-event" style="margin-bottom:0;"><div class="timeline-dot" style="background:var(--border);"></div><div><div class="timeline-status" style="color:var(--text-secondary);">Created</div><div class="timeline-desc">Parcel submitted successfully</div><div class="timeline-time">8:47 AM · Today</div></div></div>
+            </div>
+            <div style="margin-top:16px;margin-bottom:24px;"><button class="btn-material-amber" onclick="agoto('delivconfirm')">Confirm Delivery</button></div>
           </div>
-          <div style="margin-top:24px;"><button class="btn-primary" onclick="showSuccess()">✓ Confirm &amp; Send</button></div>
         </div>
-        <!-- Success state -->
-        <div id="send-success" style="display:none;text-align:center;padding-top:40px;">
-          <div style="font-size:64px;">🎉</div>
-          <h3 style="font-size:22px;font-weight:700;color:var(--navy);margin-top:16px;">Parcel Submitted!</h3>
-          <p style="font-size:14px;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Your parcel is being processed.<br>You'll receive updates shortly.</p>
-          <div style="background:var(--green-light);border-radius:12px;padding:16px;margin-top:20px;">
-            <p style="font-size:13px;font-weight:600;color:#065F46;">Parcel ID: WD-20240628-0042</p>
+
+        <!-- A-SCREEN: DELIVERY CONFIRMATION -->
+        <div class="android-screen" id="ascreen-delivconfirm">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100% - 40px);">
+            <div style="width:100px;height:100px;border-radius:50%;background:rgba(245,166,35,0.15);display:flex;align-items:center;justify-content:center;font-size:48px;">🎉</div>
+            <h2 style="font-size:24px;font-weight:700;color:var(--navy);margin-top:20px;">Delivery Confirmed!</h2>
+            <p style="font-size:14px;color:var(--text-secondary);text-align:center;margin-top:8px;line-height:1.6;">Your parcel is on its way.<br>You'll receive updates as it progresses.</p>
+            <div class="material-card" style="margin-top:24px;width:100%;text-align:center;">
+              <p style="font-size:12px;color:var(--text-secondary);">Delivery ID</p>
+              <p style="font-size:16px;font-weight:700;color:var(--blue-android);margin-top:4px;">WD-20240628-0042</p>
+            </div>
+            <div style="width:100%;margin-top:24px;"><button class="btn-material" onclick="agoto('home')">Back to Home</button></div>
           </div>
-          <button class="btn-blue" style="margin-top:24px;" onclick="goto('home')">Back to Home</button>
         </div>
-      </div>
+
+        <!-- A-SCREEN: TRACK DELIVERY -->
+        <div class="android-screen" id="ascreen-track">
+          <div class="android-status-bar"><span>9:41</span></div>
+          <div class="android-screen-content">
+            <div class="android-nav-bar"><button class="android-back-btn" onclick="agoto('home')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="android-nav-title">Track Delivery</span></div>
+            <div><label class="field-label">Delivery ID</label><input class="material-field" value="WD-20240628-0038"></div>
+            <div style="margin-top:12px;"><button class="btn-material" onclick="ashowTracking()">Track</button></div>
+            <div id="atrack-result" style="display:none;">
+              <div class="material-card" style="margin-top:16px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;"><span style="font-size:15px;font-weight:700;color:var(--navy);">WD-20240628-0038</span><span style="background:var(--blue-android);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">In Transit</span></div>
+                <div class="detail-row"><span class="detail-label">Method</span><span class="detail-value">🛵 Motorbike</span></div>
+                <div class="detail-row"><span class="detail-label">Driver</span><span class="detail-value">Ama Boateng</span></div>
+                <div class="detail-row" style="border:none;"><span class="detail-label">ETA</span><span class="detail-value" style="color:var(--success);">~8 minutes</span></div>
+              </div>
+              <div class="material-card" style="margin-top:0;">
+                <p style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">📍 Timeline</p>
+                <div class="timeline-event"><div class="timeline-dot"></div><div><div class="timeline-status">In Transit</div><div class="timeline-desc">Driver picked up your parcel</div><div class="timeline-time">9:15 AM · Today</div></div></div>
+                <div class="timeline-event"><div class="timeline-dot" style="background:var(--border);"></div><div><div class="timeline-status" style="color:var(--text-secondary);">Assigned</div><div class="timeline-desc">Driver Ama Boateng assigned</div><div class="timeline-time">9:02 AM · Today</div></div></div>
+                <div class="timeline-event" style="margin-bottom:0;"><div class="timeline-dot" style="background:var(--border);"></div><div><div class="timeline-status" style="color:var(--text-secondary);">Created</div><div class="timeline-desc">Parcel submitted successfully</div><div class="timeline-time">8:47 AM · Today</div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /android-phone-inner -->
+    </div><!-- /android-phone -->
+
+    <div class="screen-labels">
+      <div class="screen-label active" id="albl-welcome" onclick="agoto('welcome')">Welcome</div>
+      <div class="screen-label" id="albl-signup" onclick="agoto('signup')">Sign Up</div>
+      <div class="screen-label" id="albl-idverify" onclick="agoto('idverify')">ID Verify</div>
+      <div class="screen-label" id="albl-home" onclick="agoto('home')">Home</div>
+      <div class="screen-label" id="albl-addparcel" onclick="agoto('addparcel')">Add Parcel</div>
+      <div class="screen-label" id="albl-parcelverify" onclick="agoto('parcelverify')">Photo</div>
+      <div class="screen-label" id="albl-delivmethod" onclick="agoto('delivmethod')">Method</div>
+      <div class="screen-label" id="albl-payment" onclick="agoto('payment')">Payment</div>
+      <div class="screen-label" id="albl-driverassign" onclick="agoto('driverassign')">Driver</div>
+      <div class="screen-label" id="albl-delivdetails" onclick="agoto('delivdetails')">Details</div>
+      <div class="screen-label" id="albl-track" onclick="agoto('track')">Track</div>
     </div>
+  </div><!-- /phone-section Android -->
 
-    <!-- ═══════════ SCREEN 6: TRACK DELIVERY ═══════════ -->
-    <div class="screen" id="screen-track">
-      <div class="status-bar"><span>9:41</span><div class="status-bar-icons"><svg width="17" height="12" viewBox="0 0 17 12"><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg></div></div>
-      <div class="screen-content">
-        <div class="nav-bar">
-          <button class="back-btn" onclick="goto('home')">
-            <svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-          </button>
-          <span class="nav-title">Track Delivery</span>
-        </div>
-        <div>
-          <label class="field-label">Delivery ID</label>
-          <input class="text-field" type="text" value="WD-20240628-0038" id="track-input">
-        </div>
-        <button class="btn-blue" style="margin-top:14px;" onclick="showTracking()">Track</button>
-        <div id="track-result" style="display:none;">
-          <div class="tracking-card">
-            <div class="tracking-header">
-              <span style="font-size:15px;font-weight:700;color:var(--navy);">WD-20240628-0038</span>
-              <span class="status-badge">In Transit</span>
-            </div>
-            <div class="tracking-info-row"><span class="tracking-label">Method</span><span class="tracking-value">🛵 Motorbike</span></div>
-            <div class="tracking-info-row"><span class="tracking-label">Driver</span><span class="tracking-value">Ama Boateng</span></div>
-            <div class="tracking-info-row"><span class="tracking-label">ETA</span><span class="tracking-value" style="color:var(--success);">~8 minutes</span></div>
-            <p class="timeline-title">📍 Timeline</p>
-            <div class="timeline-event">
-              <div class="timeline-dot"></div>
-              <div><div class="timeline-status">In Transit</div><div class="timeline-desc">Driver picked up your parcel</div><div class="timeline-time">9:15 AM · Today</div></div>
-            </div>
-            <div class="timeline-event">
-              <div class="timeline-dot" style="background:var(--border);"></div>
-              <div><div class="timeline-status" style="color:var(--text-secondary);">Assigned</div><div class="timeline-desc">Driver Ama Boateng assigned</div><div class="timeline-time">9:02 AM · Today</div></div>
-            </div>
-            <div class="timeline-event" style="margin-bottom:0;">
-              <div class="timeline-dot" style="background:var(--border);"></div>
-              <div><div class="timeline-status" style="color:var(--text-secondary);">Created</div><div class="timeline-desc">Parcel submitted successfully</div><div class="timeline-time">8:47 AM · Today</div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+</div><!-- /phones-row -->
 
-  </div><!-- /phone-inner -->
-</div><!-- /phone -->
-
-<!-- Controls -->
-<div class="screen-labels">
-  <div class="screen-label active" id="lbl-welcome" onclick="goto('welcome')">Welcome</div>
-  <div class="screen-label" id="lbl-signup" onclick="goto('signup')">Sign Up</div>
-  <div class="screen-label" id="lbl-login" onclick="goto('login')">Login</div>
-  <div class="screen-label" id="lbl-home" onclick="goto('home')">Home</div>
-  <div class="screen-label" id="lbl-send" onclick="goto('send')">Send Parcel</div>
-  <div class="screen-label" id="lbl-track" onclick="goto('track')">Track</div>
-</div>
-
-<div style="color:rgba(255,255,255,0.4);font-size:12px;text-align:center;">
-  Tap any screen or use the labels above · Built from live iOS source code
+<div style="color:rgba(255,255,255,0.35);font-size:12px;text-align:center;max-width:700px;">
+  Tap any screen or use the labels below each phone · Built from live iOS &amp; Android source code
 </div>
 
 <script>
-  const screens = ['welcome','signup','login','home','send','track'];
-  let current = 'welcome';
-  let sendStepNum = 0;
+/* ── iOS navigation ── */
+const screens = ['welcome','signup','login','home','send','track'];
+let current = 'welcome';
+let sendStepNum = 0;
 
-  function goto(name) {
-    if (name === current) return;
+function goto(name) {
+  if (name === current) return;
+  const prev = document.getElementById('screen-' + current);
+  const next = document.getElementById('screen-' + name);
+  prev.classList.remove('active'); prev.classList.add('exit-left');
+  setTimeout(() => prev.classList.remove('exit-left'), 400);
+  next.classList.add('active');
+  current = name;
+  screens.forEach(s => document.getElementById('lbl-' + s)?.classList.remove('active'));
+  document.getElementById('lbl-' + name)?.classList.add('active');
+  if (name === 'send') sendStep(0);
+  if (name === 'track') document.getElementById('track-result').style.display = 'none';
+}
 
-    const prev = document.getElementById('screen-' + current);
-    const next = document.getElementById('screen-' + name);
+function sendStep(n) {
+  const titles = ['Send a Parcel','Parcel Details','Parcel Size','Confirm'];
+  sendStepNum = n;
+  for (let i = 0; i < 4; i++) { const el = document.getElementById('send-step-' + i); if (el) el.style.display = 'none'; }
+  document.getElementById('send-success').style.display = 'none';
+  document.getElementById('send-step-' + n).style.display = 'block';
+  document.getElementById('send-step-title').textContent = titles[n];
+  for (let i = 0; i < 4; i++) document.getElementById('sdot-' + i).classList.toggle('active', i <= n);
+}
 
-    prev.classList.remove('active');
-    prev.classList.add('exit-left');
-    setTimeout(() => prev.classList.remove('exit-left'), 400);
+function showSuccess() {
+  for (let i = 0; i < 4; i++) { const el = document.getElementById('send-step-' + i); if (el) el.style.display = 'none'; }
+  document.getElementById('send-success').style.display = 'block';
+  document.getElementById('send-step-title').textContent = 'Submitted!';
+  for (let i = 0; i < 4; i++) document.getElementById('sdot-' + i).classList.add('active');
+}
 
-    next.classList.add('active');
-    current = name;
+function showTracking() {
+  document.getElementById('track-result').style.display = 'block';
+}
 
-    // Update labels
-    screens.forEach(s => {
-      document.getElementById('lbl-' + s)?.classList.remove('active');
-    });
-    document.getElementById('lbl-' + name)?.classList.add('active');
+/* ── Android navigation ── */
+const ascreens = ['welcome','signup','login','idverify','home','addparcel','parcelverify','parceldims','delivmethod','payment','driverassign','delivdetails','delivconfirm','track'];
+let acurrent = 'welcome';
 
-    // Reset send parcel state when entering
-    if (name === 'send') {
-      sendStep(0);
-    }
-    if (name === 'track') {
-      document.getElementById('track-result').style.display = 'none';
-    }
+function agoto(name) {
+  if (name === acurrent) return;
+  const prev = document.getElementById('ascreen-' + acurrent);
+  const next = document.getElementById('ascreen-' + name);
+  if (!prev || !next) return;
+  prev.classList.remove('active'); prev.classList.add('exit-left');
+  setTimeout(() => prev.classList.remove('exit-left'), 400);
+  next.classList.add('active');
+  acurrent = name;
+  ascreens.forEach(s => document.getElementById('albl-' + s)?.classList.remove('active'));
+  document.getElementById('albl-' + name)?.classList.add('active');
+  if (name === 'addparcel') aparcelStep(0);
+  if (name === 'parcelverify') resetParcelVerify();
+  if (name === 'track') document.getElementById('atrack-result').style.display = 'none';
+  if (name === 'driverassign') startDriverSearch();
+}
+
+function aparcelStep(n) {
+  document.getElementById('aparcel-step-0').style.display = n === 0 ? 'block' : 'none';
+  document.getElementById('aparcel-step-1').style.display = n === 1 ? 'block' : 'none';
+  document.getElementById('aparcel-title').textContent = n === 0 ? 'Send a Parcel' : 'Parcel Details';
+  for (let i = 0; i < 2; i++) document.getElementById('adot-' + i).classList.toggle('active', i <= n);
+}
+
+/* ID Verification */
+let selectedDoc = -1;
+function selectDoc(i) {
+  selectedDoc = i;
+  for (let j = 0; j < 4; j++) {
+    const el = document.getElementById('idopt-' + j);
+    el.classList.toggle('selected', j === i);
+    const check = el.querySelector('.option-check');
+    if (j === i && !check) {
+      const c = document.createElement('div'); c.className = 'option-check'; c.innerHTML = '✓';
+      c.style.cssText = 'color:white;font-size:12px;font-weight:700;';
+      el.appendChild(c);
+    } else if (j !== i && check) check.remove();
   }
+  const btn = document.getElementById('idverify-btn');
+  btn.disabled = false; btn.style.opacity = '1';
+}
 
-  function sendStep(n) {
-    const titles = ['Send a Parcel', 'Parcel Details', 'Parcel Size', 'Confirm'];
-    sendStepNum = n;
+/* Parcel Verification */
+let pvPhoto = false;
+function pvTakePhoto() {
+  pvPhoto = true;
+  document.getElementById('pv-camera').style.borderColor = 'var(--blue-android)';
+  document.getElementById('pv-camera').style.background = 'rgba(74,108,247,0.05)';
+  document.getElementById('pv-camera-label').textContent = 'Photo taken ✓';
+  document.getElementById('pv-continue').disabled = false;
+  document.getElementById('pv-continue').style.opacity = '1';
+}
 
-    // Hide all steps and success
-    for (let i = 0; i < 4; i++) {
-      const el = document.getElementById('send-step-' + i);
-      if (el) el.style.display = 'none';
-    }
-    document.getElementById('send-success').style.display = 'none';
+let pvMicOn = false;
+function pvToggleMic() {
+  pvMicOn = !pvMicOn;
+  document.getElementById('pv-mic-label').textContent = pvMicOn ? 'Recording... (tap to stop)' : 'Audio recorded ✓';
+}
 
-    // Show current step
-    document.getElementById('send-step-' + n).style.display = 'block';
-    document.getElementById('send-step-title').textContent = titles[n];
+function resetParcelVerify() {
+  pvPhoto = false; pvMicOn = false;
+  document.getElementById('pv-camera').style.borderColor = 'var(--border)';
+  document.getElementById('pv-camera').style.background = '';
+  document.getElementById('pv-camera-label').textContent = 'Tap to take photo';
+  document.getElementById('pv-mic-label').textContent = 'Tap to record audio';
+  document.getElementById('pv-continue').disabled = true;
+  document.getElementById('pv-continue').style.opacity = '0.4';
+}
 
-    // Update step dots
-    for (let i = 0; i < 4; i++) {
-      const dot = document.getElementById('sdot-' + i);
-      dot.classList.toggle('active', i <= n);
-    }
+/* Delivery Method */
+let selectedMethod = -1;
+function selectMethod(i) {
+  selectedMethod = i;
+  for (let j = 0; j < 3; j++) {
+    const el = document.getElementById('dm-' + j);
+    el.classList.toggle('selected', j === i);
+    const check = el.querySelector('.option-check');
+    if (j === i && !check) {
+      const c = document.createElement('div'); c.className = 'option-check'; c.innerHTML = '✓';
+      c.style.cssText = 'color:white;font-size:12px;font-weight:700;';
+      el.appendChild(c);
+    } else if (j !== i && check) check.remove();
   }
+  const btn = document.getElementById('dm-btn');
+  btn.disabled = false; btn.style.opacity = '1';
+}
 
-  function showSuccess() {
-    for (let i = 0; i < 4; i++) {
-      const el = document.getElementById('send-step-' + i);
-      if (el) el.style.display = 'none';
-    }
-    document.getElementById('send-success').style.display = 'block';
-    document.getElementById('send-step-title').textContent = 'Submitted!';
-    // All dots amber
-    for (let i = 0; i < 4; i++) {
-      document.getElementById('sdot-' + i).classList.add('active');
-    }
+/* Payment */
+let selectedPayment = -1;
+function selectPayment(i) {
+  selectedPayment = i;
+  for (let j = 0; j < 3; j++) {
+    const el = document.getElementById('pay-' + j);
+    el.classList.toggle('selected-amber', j === i);
+    const check = el.querySelector('.option-check-amber');
+    if (j === i && !check) {
+      const c = document.createElement('div'); c.className = 'option-check-amber'; c.innerHTML = '✓';
+      c.style.cssText = 'color:white;font-size:12px;font-weight:700;';
+      el.appendChild(c);
+    } else if (j !== i && check) check.remove();
   }
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = false; btn.style.opacity = '1';
+}
 
-  function showTracking() {
-    document.getElementById('track-result').style.display = 'block';
-    document.getElementById('track-result').scrollIntoView({behavior:'smooth', block:'nearest'});
-  }
+/* Driver Assignment animation */
+let driverTimer = null;
+function startDriverSearch() {
+  document.getElementById('da-searching').style.display = 'block';
+  document.getElementById('da-found').style.display = 'none';
+  if (driverTimer) clearTimeout(driverTimer);
+  driverTimer = setTimeout(() => {
+    document.getElementById('da-searching').style.display = 'none';
+    document.getElementById('da-found').style.display = 'block';
+  }, 2500);
+}
+
+function ashowTracking() {
+  document.getElementById('atrack-result').style.display = 'block';
+}
 </script>
 
 </body>
