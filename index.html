@@ -337,6 +337,16 @@
   .screen-label:hover { color: white; background: rgba(255,255,255,0.12); }
   .screen-label.active { color: white; background: rgba(245,166,35,0.25); border-color: rgba(245,166,35,0.4); }
 
+  /* ── iOS option rows (for ID verify, delivery method, payment) ── */
+  .ios-option-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 18px; border: 1.5px solid var(--border);
+    border-radius: 14px; cursor: pointer; margin-bottom: 10px;
+    background: white; transition: border-color 0.15s, background 0.15s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .ios-option-row.selected { border-color: var(--amber); background: rgba(245,166,35,0.04); }
+
   /* ── FAB-style mini badge ── */
   .amount-card {
     background: var(--blue-android); border-radius: 14px; padding: 18px;
@@ -396,7 +406,7 @@
               <div><label class="field-label">Password</label><input class="text-field" type="password" value="••••••••"></div>
             </div>
             <div style="margin-top:28px;">
-              <button class="btn-primary" onclick="goto('home')">Create Account</button>
+              <button class="btn-primary" onclick="goto('idverify')">Create Account</button>
               <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin-top:16px;">Already have an account? <span style="color:var(--blue);cursor:pointer;font-weight:600;" onclick="goto('login')">Log in</span></p>
             </div>
           </div>
@@ -433,7 +443,7 @@
               </div>
             </div>
             <div class="home-actions-grid">
-              <button class="action-card amber" onclick="goto('send')"><div class="action-card-icon">📦</div><div class="action-card-label">Send a Parcel</div></button>
+              <button class="action-card amber" onclick="goto('addparcel')"><div class="action-card-icon">📦</div><div class="action-card-label">Send a Parcel</div></button>
               <button class="action-card blue" onclick="goto('track')"><div class="action-card-icon">🛵</div><div class="action-card-label">Track Delivery</div></button>
             </div>
             <p class="recent-section-title">Recent Deliveries</p>
@@ -441,49 +451,163 @@
           </div>
         </div>
 
-        <!-- SCREEN: SEND PARCEL -->
-        <div class="screen" id="screen-send">
+        <!-- SCREEN: ID VERIFICATION -->
+        <div class="screen" id="screen-idverify">
           <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
           <div class="screen-content">
-            <div class="nav-bar"><button class="back-btn" onclick="goto('home')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="nav-title" id="send-step-title">Send a Parcel</span></div>
-            <div class="step-bar"><div class="step-dot active" id="sdot-0"></div><div class="step-dot" id="sdot-1"></div><div class="step-dot" id="sdot-2"></div><div class="step-dot" id="sdot-3"></div></div>
-            <div id="send-step-0">
+            <div style="text-align:center;padding:20px 0 20px;">
+              <div style="font-size:48px;margin-bottom:12px;">🪪</div>
+              <h2 style="font-size:22px;font-weight:700;color:var(--navy);">Verify Your Identity</h2>
+              <p style="font-size:14px;color:var(--text-secondary);margin-top:6px;">Select a valid Ghanaian document to continue</p>
+            </div>
+            <div id="ios-id-options">
+              <div class="ios-option-row" id="ios-idopt-0" onclick="iosSelectDoc(0)"><span style="font-size:20px;">🪪</span><span style="font-size:15px;font-weight:500;color:var(--navy);">Ghana Card (NIA)</span></div>
+              <div class="ios-option-row" id="ios-idopt-1" onclick="iosSelectDoc(1)"><span style="font-size:20px;">📒</span><span style="font-size:15px;font-weight:500;color:var(--navy);">Passport</span></div>
+              <div class="ios-option-row" id="ios-idopt-2" onclick="iosSelectDoc(2)"><span style="font-size:20px;">🚗</span><span style="font-size:15px;font-weight:500;color:var(--navy);">Driver's License</span></div>
+              <div class="ios-option-row" id="ios-idopt-3" onclick="iosSelectDoc(3)"><span style="font-size:20px;">🗳️</span><span style="font-size:15px;font-weight:500;color:var(--navy);">Voter's ID</span></div>
+            </div>
+            <div style="margin-top:24px;"><button class="btn-primary" id="ios-idverify-btn" onclick="goto('home')" style="opacity:0.4;" disabled>Continue</button></div>
+          </div>
+        </div>
+
+        <!-- SCREEN: ADD PARCEL -->
+        <div class="screen" id="screen-addparcel">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content">
+            <div class="nav-bar"><button class="back-btn" onclick="goto('home')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="nav-title" id="ios-aparcel-title">Send a Parcel</span></div>
+            <div class="step-bar"><div class="step-dot active" id="ios-adot-0"></div><div class="step-dot" id="ios-adot-1"></div></div>
+            <div id="ios-aparcel-step-0">
               <h3 class="section-title">Where is it going?</h3><p class="section-subtitle" style="margin-bottom:20px;">Enter pickup and drop-off addresses in Accra.</p>
               <div class="field-group"><div><label class="field-label">📍 Pickup address</label><input class="text-field" value="East Legon, Accra"></div><div><label class="field-label">🏁 Drop-off address</label><input class="text-field" value="Osu, Oxford Street"></div></div>
-              <div style="margin-top:28px;"><button class="btn-primary" onclick="sendStep(1)">Next</button></div>
+              <div style="margin-top:28px;"><button class="btn-primary" onclick="iosAparcelStep(1)">Next</button></div>
             </div>
-            <div id="send-step-1" style="display:none;">
+            <div id="ios-aparcel-step-1" style="display:none;">
               <h3 class="section-title">What are you sending?</h3><p class="section-subtitle" style="margin-bottom:20px;">Describe the parcel contents briefly.</p>
               <div><label class="field-label">📝 Description</label><input class="text-field" value="Books and clothing"></div>
-              <div style="margin-top:28px;"><button class="btn-primary" onclick="sendStep(2)">Next</button></div>
+              <div style="margin-top:28px;"><button class="btn-primary" onclick="goto('parcelverify')">Next</button></div>
             </div>
-            <div id="send-step-2" style="display:none;">
-              <h3 class="section-title">Parcel dimensions</h3><p class="section-subtitle" style="margin-bottom:20px;">Size in cm and weight in kg.</p>
-              <div class="field-group">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label class="field-label">Length (cm)</label><input class="text-field" value="30" type="number"></div><div><label class="field-label">Width (cm)</label><input class="text-field" value="20" type="number"></div></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label class="field-label">Height (cm)</label><input class="text-field" value="15" type="number"></div><div><label class="field-label">Weight (kg)</label><input class="text-field" value="2.5" type="number"></div></div>
+          </div>
+        </div>
+
+        <!-- SCREEN: PARCEL VERIFICATION -->
+        <div class="screen" id="screen-parcelverify">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content">
+            <div class="nav-bar"><button class="back-btn" onclick="goto('addparcel')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="nav-title">Verify Parcel</span></div>
+            <div id="ios-pv-camera" style="background:white;border-radius:16px;height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border:2px dashed var(--border);margin-bottom:16px;box-shadow:0 2px 12px rgba(0,0,0,0.05);" onclick="iosPvTakePhoto()">
+              <div style="font-size:36px;">📷</div>
+              <p style="font-size:13px;color:var(--text-secondary);margin-top:8px;" id="ios-pv-camera-label">Tap to take photo</p>
+            </div>
+            <div style="background:white;border-radius:16px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,0.05);">
+              <p style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px;">Audio Instructions</p>
+              <div style="text-align:center;"><button onclick="iosPvToggleMic()" style="width:52px;height:52px;border-radius:50%;border:none;background:rgba(37,99,235,0.08);cursor:pointer;font-size:26px;">🎤</button><p style="font-size:12px;color:var(--text-secondary);margin-top:8px;" id="ios-pv-mic-label">Tap to record audio</p></div>
+            </div>
+            <div style="margin-top:20px;"><button class="btn-primary" id="ios-pv-continue" onclick="goto('parceldims')" style="opacity:0.4;" disabled>Continue</button></div>
+          </div>
+        </div>
+
+        <!-- SCREEN: PARCEL DIMENSIONS -->
+        <div class="screen" id="screen-parceldims">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content">
+            <div class="nav-bar"><button class="back-btn" onclick="goto('parcelverify')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="nav-title">Parcel Dimensions</span></div>
+            <p style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;">Enter size in cm and weight in kg.</p>
+            <div class="field-group">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label class="field-label">Length (cm)</label><input class="text-field" value="30" type="number"></div><div><label class="field-label">Width (cm)</label><input class="text-field" value="20" type="number"></div></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div><label class="field-label">Height (cm)</label><input class="text-field" value="15" type="number"></div><div><label class="field-label">Weight (kg)</label><input class="text-field" value="2.5" type="number"></div></div>
+            </div>
+            <div style="margin-top:28px;"><button class="btn-primary" onclick="goto('delivmethod')">Continue</button></div>
+          </div>
+        </div>
+
+        <!-- SCREEN: DELIVERY METHOD -->
+        <div class="screen" id="screen-delivmethod">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content">
+            <div class="nav-bar"><button class="back-btn" onclick="goto('parceldims')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="nav-title">Delivery Method</span></div>
+            <p style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;">How should we deliver your parcel?</p>
+            <div class="ios-option-row" id="ios-dm-0" onclick="iosSelectMethod(0)"><div style="display:flex;align-items:center;gap:12px;"><span style="font-size:24px;">🛵</span><div><p style="font-size:15px;font-weight:600;color:var(--navy);">Motorbike</p><p style="font-size:13px;color:var(--text-secondary);">Fastest · GHS 15</p></div></div></div>
+            <div class="ios-option-row" id="ios-dm-1" onclick="iosSelectMethod(1)"><div style="display:flex;align-items:center;gap:12px;"><span style="font-size:24px;">🚗</span><div><p style="font-size:15px;font-weight:600;color:var(--navy);">Car</p><p style="font-size:13px;color:var(--text-secondary);">Comfort · GHS 25</p></div></div></div>
+            <div class="ios-option-row" id="ios-dm-2" onclick="iosSelectMethod(2)"><div style="display:flex;align-items:center;gap:12px;"><span style="font-size:24px;">🚌</span><div><p style="font-size:15px;font-weight:600;color:var(--navy);">Tro-Tro</p><p style="font-size:13px;color:var(--text-secondary);">Economical · GHS 8</p></div></div></div>
+            <div style="margin-top:20px;"><button class="btn-primary" id="ios-dm-btn" onclick="goto('payment')" style="opacity:0.4;" disabled>Continue</button></div>
+          </div>
+        </div>
+
+        <!-- SCREEN: PAYMENT -->
+        <div class="screen" id="screen-payment">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content">
+            <div class="nav-bar"><button class="back-btn" onclick="goto('delivmethod')"><svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button><span class="nav-title">Payment</span></div>
+            <div style="background:var(--blue);border-radius:16px;padding:20px;text-align:center;margin-bottom:20px;">
+              <p style="font-size:13px;color:rgba(255,255,255,0.7);">Total Amount</p>
+              <p style="font-size:34px;font-weight:700;color:white;margin-top:4px;">GHS 25.00</p>
+            </div>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:14px;">Choose payment method:</p>
+            <div class="ios-option-row" id="ios-pay-0" onclick="iosSelectPayment(0)"><span style="font-size:22px;">📱</span><span style="font-size:15px;font-weight:500;color:var(--navy);">MTN MoMo</span></div>
+            <div class="ios-option-row" id="ios-pay-1" onclick="iosSelectPayment(1)"><span style="font-size:22px;">📲</span><span style="font-size:15px;font-weight:500;color:var(--navy);">Vodafone Cash</span></div>
+            <div class="ios-option-row" id="ios-pay-2" onclick="iosSelectPayment(2)"><span style="font-size:22px;">💳</span><span style="font-size:15px;font-weight:500;color:var(--navy);">AirtelTigo Money</span></div>
+            <div style="margin-top:14px;"><label class="field-label">Mobile Money Number</label><input class="text-field" value="+233 24 123 4567"></div>
+            <div style="margin-top:16px;"><button class="btn-primary" id="ios-pay-btn" onclick="goto('driverassign')" style="opacity:0.4;" disabled>Pay GHS 25.00</button></div>
+          </div>
+        </div>
+
+        <!-- SCREEN: DRIVER ASSIGNMENT -->
+        <div class="screen" id="screen-driverassign">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100% - 60px);">
+            <div id="ios-da-searching" style="text-align:center;">
+              <div style="width:100px;height:100px;border-radius:50%;background:rgba(37,99,235,0.08);display:flex;align-items:center;justify-content:center;font-size:40px;animation:pulse 1.2s ease-in-out infinite;margin:0 auto 20px;">🛵</div>
+              <h3 style="font-size:20px;font-weight:700;color:var(--navy);">Finding your driver...</h3>
+              <p style="font-size:14px;color:var(--text-secondary);margin-top:8px;">Looking for the nearest available driver</p>
+              <div style="margin-top:20px;"><div style="width:36px;height:36px;border:3px solid var(--blue);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;margin:auto;"></div></div>
+            </div>
+            <div id="ios-da-found" style="display:none;text-align:center;width:100%;">
+              <p style="font-size:22px;font-weight:700;color:var(--navy);">Driver Assigned! 🎉</p>
+              <div style="background:white;border-radius:16px;padding:20px;margin-top:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);text-align:left;">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;"><div style="width:52px;height:52px;border-radius:50%;background:rgba(245,166,35,0.15);display:flex;align-items:center;justify-content:center;font-size:26px;">🧑</div><div><p style="font-size:17px;font-weight:600;color:var(--navy);">Ama Boateng</p><p style="font-size:13px;color:var(--amber);">⭐ 4.8</p></div></div>
+                <div class="tracking-info-row"><span class="tracking-label">Vehicle</span><span class="tracking-value">Motorbike · GR-2847-22</span></div>
+                <div class="tracking-info-row" style="border:none;"><span class="tracking-label">ETA</span><span class="tracking-value" style="color:var(--success);">~8 minutes</span></div>
               </div>
-              <div style="margin-top:28px;"><button class="btn-primary" onclick="sendStep(3)">Next</button></div>
+              <button class="btn-blue" style="margin-top:20px;" onclick="goto('delivdetails')">View Delivery Details</button>
             </div>
-            <div id="send-step-3" style="display:none;">
-              <h3 class="section-title">Review your parcel</h3>
-              <div style="background:white;border-radius:16px;padding:20px;margin-top:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
-                <div class="tracking-info-row" style="border:none;padding-top:0;"><span class="tracking-label">From</span><span class="tracking-value">East Legon, Accra</span></div>
-                <div class="tracking-info-row"><span class="tracking-label">To</span><span class="tracking-value">Osu, Oxford Street</span></div>
-                <div class="tracking-info-row"><span class="tracking-label">Contents</span><span class="tracking-value">Books and clothing</span></div>
-                <div class="tracking-info-row"><span class="tracking-label">Size</span><span class="tracking-value">30 × 20 × 15 cm</span></div>
-                <div class="tracking-info-row"><span class="tracking-label">Weight</span><span class="tracking-value">2.5 kg</span></div>
-                <div class="tracking-info-row"><span class="tracking-label">Estimated cost</span><span class="tracking-value" style="color:var(--amber);font-weight:700;">GHS 25.00</span></div>
-              </div>
-              <div style="margin-top:24px;"><button class="btn-primary" onclick="showSuccess()">✓ Confirm &amp; Send</button></div>
+          </div>
+        </div>
+
+        <!-- SCREEN: DELIVERY DETAILS -->
+        <div class="screen" id="screen-delivdetails">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content">
+            <div class="nav-bar"><span class="nav-title">Delivery Details</span></div>
+            <div style="background:rgba(37,99,235,0.08);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><span style="font-size:13px;color:var(--text-secondary);">Status</span><span class="status-badge" style="font-size:12px;">IN TRANSIT</span></div>
+            <div style="background:white;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);margin-bottom:12px;">
+              <div class="tracking-info-row" style="border:none;padding-top:0;"><span class="tracking-label">📍 Pickup</span><span class="tracking-value">East Legon, Accra</span></div>
+              <div class="tracking-info-row"><span class="tracking-label">🏁 Drop-off</span><span class="tracking-value">Osu, Oxford Street</span></div>
+              <div class="tracking-info-row"><span class="tracking-label">🛵 Driver</span><span class="tracking-value">Ama Boateng</span></div>
+              <div class="tracking-info-row"><span class="tracking-label">🆔 ID</span><span class="tracking-value">WD-20240628-0042</span></div>
+              <div class="tracking-info-row" style="border:none;"><span class="tracking-label">⏱ ETA</span><span class="tracking-value" style="color:var(--success);">~8 minutes</span></div>
             </div>
-            <div id="send-success" style="display:none;text-align:center;padding-top:40px;">
-              <div style="font-size:64px;">🎉</div>
-              <h3 style="font-size:22px;font-weight:700;color:var(--navy);margin-top:16px;">Parcel Submitted!</h3>
-              <p style="font-size:14px;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Your parcel is being processed.<br>You'll receive updates shortly.</p>
-              <div style="background:var(--green-light);border-radius:12px;padding:16px;margin-top:20px;"><p style="font-size:13px;font-weight:600;color:#065F46;">Parcel ID: WD-20240628-0042</p></div>
-              <button class="btn-blue" style="margin-top:24px;" onclick="goto('home')">Back to Home</button>
+            <p class="timeline-title">📍 Timeline</p>
+            <div style="background:white;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);margin-bottom:16px;">
+              <div class="timeline-event"><div class="timeline-dot"></div><div><div class="timeline-status">In Transit</div><div class="timeline-desc">Driver picked up your parcel</div><div class="timeline-time">9:15 AM · Today</div></div></div>
+              <div class="timeline-event"><div class="timeline-dot" style="background:var(--border);"></div><div><div class="timeline-status" style="color:var(--text-secondary);">Assigned</div><div class="timeline-desc">Driver Ama Boateng assigned</div><div class="timeline-time">9:02 AM · Today</div></div></div>
+              <div class="timeline-event" style="margin-bottom:0;"><div class="timeline-dot" style="background:var(--border);"></div><div><div class="timeline-status" style="color:var(--text-secondary);">Created</div><div class="timeline-desc">Parcel submitted</div><div class="timeline-time">8:47 AM · Today</div></div></div>
             </div>
+            <button class="btn-primary" style="margin-bottom:24px;" onclick="goto('delivconfirm')">Confirm Delivery</button>
+          </div>
+        </div>
+
+        <!-- SCREEN: DELIVERY CONFIRMATION -->
+        <div class="screen" id="screen-delivconfirm">
+          <div class="status-bar"><span>9:41</span><div class="status-bar-icons"></div></div>
+          <div class="screen-content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100% - 60px);">
+            <div style="width:100px;height:100px;border-radius:50%;background:rgba(245,166,35,0.15);display:flex;align-items:center;justify-content:center;font-size:48px;">🎉</div>
+            <h2 style="font-size:24px;font-weight:700;color:var(--navy);margin-top:20px;">Delivery Confirmed!</h2>
+            <p style="font-size:14px;color:var(--text-secondary);text-align:center;margin-top:8px;line-height:1.6;">Your parcel has been delivered.<br>Thank you for using WayDrop!</p>
+            <div style="background:var(--green-light);border-radius:14px;padding:16px;margin-top:20px;width:100%;text-align:center;">
+              <p style="font-size:12px;color:#065F46;">Delivery ID</p>
+              <p style="font-size:16px;font-weight:700;color:#065F46;margin-top:4px;">WD-20240628-0042</p>
+            </div>
+            <button class="btn-blue" style="margin-top:24px;width:100%;" onclick="goto('home')">Back to Home</button>
           </div>
         </div>
 
@@ -515,9 +639,15 @@
     <div class="screen-labels">
       <div class="screen-label active" id="lbl-welcome" onclick="goto('welcome')">Welcome</div>
       <div class="screen-label" id="lbl-signup" onclick="goto('signup')">Sign Up</div>
-      <div class="screen-label" id="lbl-login" onclick="goto('login')">Login</div>
+      <div class="screen-label" id="lbl-idverify" onclick="goto('idverify')">ID Verify</div>
       <div class="screen-label" id="lbl-home" onclick="goto('home')">Home</div>
-      <div class="screen-label" id="lbl-send" onclick="goto('send')">Send Parcel</div>
+      <div class="screen-label" id="lbl-addparcel" onclick="goto('addparcel')">Add Parcel</div>
+      <div class="screen-label" id="lbl-parcelverify" onclick="goto('parcelverify')">Photo</div>
+      <div class="screen-label" id="lbl-parceldims" onclick="goto('parceldims')">Dimensions</div>
+      <div class="screen-label" id="lbl-delivmethod" onclick="goto('delivmethod')">Method</div>
+      <div class="screen-label" id="lbl-payment" onclick="goto('payment')">Payment</div>
+      <div class="screen-label" id="lbl-driverassign" onclick="goto('driverassign')">Driver</div>
+      <div class="screen-label" id="lbl-delivdetails" onclick="goto('delivdetails')">Details</div>
       <div class="screen-label" id="lbl-track" onclick="goto('track')">Track</div>
     </div>
   </div><!-- /phone-section iOS -->
@@ -825,39 +955,89 @@
 
 <script>
 /* ── iOS navigation ── */
-const screens = ['welcome','signup','login','home','send','track'];
+const screens = ['welcome','signup','login','idverify','home','addparcel','parcelverify','parceldims','delivmethod','payment','driverassign','delivdetails','delivconfirm','track'];
 let current = 'welcome';
-let sendStepNum = 0;
 
 function goto(name) {
   if (name === current) return;
   const prev = document.getElementById('screen-' + current);
   const next = document.getElementById('screen-' + name);
+  if (!prev || !next) return;
   prev.classList.remove('active'); prev.classList.add('exit-left');
   setTimeout(() => prev.classList.remove('exit-left'), 400);
   next.classList.add('active');
   current = name;
   screens.forEach(s => document.getElementById('lbl-' + s)?.classList.remove('active'));
   document.getElementById('lbl-' + name)?.classList.add('active');
-  if (name === 'send') sendStep(0);
+  if (name === 'addparcel') iosAparcelStep(0);
+  if (name === 'parcelverify') iosResetParcelVerify();
   if (name === 'track') document.getElementById('track-result').style.display = 'none';
+  if (name === 'driverassign') iosStartDriverSearch();
 }
 
-function sendStep(n) {
-  const titles = ['Send a Parcel','Parcel Details','Parcel Size','Confirm'];
-  sendStepNum = n;
-  for (let i = 0; i < 4; i++) { const el = document.getElementById('send-step-' + i); if (el) el.style.display = 'none'; }
-  document.getElementById('send-success').style.display = 'none';
-  document.getElementById('send-step-' + n).style.display = 'block';
-  document.getElementById('send-step-title').textContent = titles[n];
-  for (let i = 0; i < 4; i++) document.getElementById('sdot-' + i).classList.toggle('active', i <= n);
+/* iOS Add Parcel steps */
+function iosAparcelStep(n) {
+  document.getElementById('ios-aparcel-step-0').style.display = n === 0 ? 'block' : 'none';
+  document.getElementById('ios-aparcel-step-1').style.display = n === 1 ? 'block' : 'none';
+  document.getElementById('ios-aparcel-title').textContent = n === 0 ? 'Send a Parcel' : 'Parcel Details';
+  for (let i = 0; i < 2; i++) document.getElementById('ios-adot-' + i).classList.toggle('active', i <= n);
 }
 
-function showSuccess() {
-  for (let i = 0; i < 4; i++) { const el = document.getElementById('send-step-' + i); if (el) el.style.display = 'none'; }
-  document.getElementById('send-success').style.display = 'block';
-  document.getElementById('send-step-title').textContent = 'Submitted!';
-  for (let i = 0; i < 4; i++) document.getElementById('sdot-' + i).classList.add('active');
+/* iOS ID Verification */
+function iosSelectDoc(i) {
+  for (let j = 0; j < 4; j++) {
+    const el = document.getElementById('ios-idopt-' + j);
+    el.classList.toggle('selected', j === i);
+  }
+  const btn = document.getElementById('ios-idverify-btn');
+  btn.disabled = false; btn.style.opacity = '1';
+}
+
+/* iOS Parcel Verification */
+function iosPvTakePhoto() {
+  document.getElementById('ios-pv-camera').style.borderColor = 'var(--amber)';
+  document.getElementById('ios-pv-camera').style.background = 'rgba(245,166,35,0.04)';
+  document.getElementById('ios-pv-camera-label').textContent = 'Photo taken ✓';
+  document.getElementById('ios-pv-continue').disabled = false;
+  document.getElementById('ios-pv-continue').style.opacity = '1';
+}
+function iosPvToggleMic() {
+  const lbl = document.getElementById('ios-pv-mic-label');
+  lbl.textContent = lbl.textContent.includes('Tap') ? 'Recording... (tap to stop)' : 'Audio recorded ✓';
+}
+function iosResetParcelVerify() {
+  document.getElementById('ios-pv-camera').style.borderColor = 'var(--border)';
+  document.getElementById('ios-pv-camera').style.background = '';
+  document.getElementById('ios-pv-camera-label').textContent = 'Tap to take photo';
+  document.getElementById('ios-pv-mic-label').textContent = 'Tap to record audio';
+  document.getElementById('ios-pv-continue').disabled = true;
+  document.getElementById('ios-pv-continue').style.opacity = '0.4';
+}
+
+/* iOS Delivery Method */
+function iosSelectMethod(i) {
+  for (let j = 0; j < 3; j++) document.getElementById('ios-dm-' + j).classList.toggle('selected', j === i);
+  const btn = document.getElementById('ios-dm-btn');
+  btn.disabled = false; btn.style.opacity = '1';
+}
+
+/* iOS Payment */
+function iosSelectPayment(i) {
+  for (let j = 0; j < 3; j++) document.getElementById('ios-pay-' + j).classList.toggle('selected', j === i);
+  const btn = document.getElementById('ios-pay-btn');
+  btn.disabled = false; btn.style.opacity = '1';
+}
+
+/* iOS Driver Assignment */
+let iosDriverTimer = null;
+function iosStartDriverSearch() {
+  document.getElementById('ios-da-searching').style.display = 'block';
+  document.getElementById('ios-da-found').style.display = 'none';
+  if (iosDriverTimer) clearTimeout(iosDriverTimer);
+  iosDriverTimer = setTimeout(() => {
+    document.getElementById('ios-da-searching').style.display = 'none';
+    document.getElementById('ios-da-found').style.display = 'block';
+  }, 2500);
 }
 
 function showTracking() {
