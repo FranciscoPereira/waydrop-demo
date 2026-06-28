@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WayDrop iOS Demo</title>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #1c2b45;
+    --amber: #F5A623;
+    --blue: #2563EB;
+    --bg: #F5F6FA;
+    --card: #FFFFFF;
+    --text-secondary: #6B7280;
+    --border: #E5E7EB;
+    --success: #10B981;
+    --green-light: #D1FAE5;
+    --red: #EF4444;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 32px;
+  }
+
+  /* ── Header ── */
+  .demo-header {
+    text-align: center;
+    color: white;
+  }
+  .demo-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .demo-header p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 6px;
+  }
+
+  /* ── Phone Shell ── */
+  .phone {
+    width: 375px;
+    height: 780px;
+    background: #1a1a1a;
+    border-radius: 52px;
+    padding: 12px;
+    box-shadow:
+      0 0 0 2px #333,
+      0 40px 120px rgba(0,0,0,0.7),
+      inset 0 0 0 1px rgba(255,255,255,0.06);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .phone-inner {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    border-radius: 42px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Dynamic Island */
+  .dynamic-island {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 34px;
+    background: #1a1a1a;
+    border-radius: 20px;
+    z-index: 100;
+  }
+
+  /* ── Screen Container ── */
+  .screen {
+    position: absolute;
+    inset: 0;
+    border-radius: 42px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+  .screen.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+  }
+  .screen.exit-left {
+    opacity: 0;
+    transform: translateX(-30%);
+    pointer-events: none;
+  }
+
+  /* ── Status Bar ── */
+  .status-bar {
+    height: 60px;
+    padding: 18px 24px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    position: relative;
+    z-index: 10;
+  }
+  .status-bar.white { color: white; }
+  .status-bar-icons { display: flex; gap: 6px; align-items: center; }
+  .status-bar-icons svg { opacity: 0.85; }
+
+  /* ── Shared Components ── */
+  .screen-content {
+    padding: 0 24px;
+    overflow-y: auto;
+    height: calc(100% - 60px);
+  }
+
+  .btn-primary {
+    width: 100%;
+    height: 52px;
+    background: var(--amber);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: 0.2px;
+  }
+  .btn-primary:hover { opacity: 0.92; transform: scale(0.99); }
+  .btn-primary:active { transform: scale(0.97); }
+
+  .btn-secondary {
+    width: 100%;
+    height: 52px;
+    background: white;
+    color: var(--navy);
+    font-size: 16px;
+    font-weight: 500;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-secondary:hover { background: var(--bg); }
+
+  .btn-blue {
+    width: 100%;
+    height: 52px;
+    background: var(--blue);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .text-field {
+    width: 100%;
+    height: 52px;
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 0 16px;
+    font-size: 15px;
+    color: var(--navy);
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+  .text-field:focus { border-color: var(--blue); }
+
+  .field-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 6px;
+    display: block;
+  }
+  .field-group { display: flex; flex-direction: column; gap: 16px; }
+
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .section-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* ── Back button ── */
+  .back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--navy);
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+  }
+
+  /* ════════════════════════════════════
+     SCREEN 1 — Welcome
+  ════════════════════════════════════ */
+  #screen-welcome { background: var(--bg); }
+  .welcome-logo {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, var(--amber), var(--blue));
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    font-weight: 800;
+    color: white;
+    margin: 0 auto;
+    box-shadow: 0 8px 24px rgba(37,99,235,0.3);
+  }
+  .welcome-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 80px;
+    gap: 0;
+  }
+  .welcome-title {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-top: 24px;
+  }
+  .welcome-brand {
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--blue);
+    letter-spacing: -1px;
+  }
+  .welcome-tagline {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .welcome-actions {
+    width: 100%;
+    margin-top: 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ════════════════════════════════════
+     SCREEN 2 — Sign Up
+  ════════════════════════════════════ */
+  #screen-signup { background: var(--bg); }
+  .signup-header {
+    padding-top: 24px;
+    margin-bottom: 28px;
+  }
+  .signup-header h2 { font-size: 24px; font-weight: 700; color: var(--navy); }
+  .signup-header p  { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+
+  /* ════════════════════════════════════
+     SCREEN 3 — Login
+  ════════════════════════════════════ */
+  #screen-login { background: var(--bg); }
+
+  /* ════════════════════════════════════
+     SCREEN 4 — Home
+  ════════════════════════════════════ */
+  #screen-home { background: var(--bg); }
+  .home-greeting {
+    padding-top: 28px;
+    margin-bottom: 28px;
+  }
+  .home-greeting-sub { font-size: 14px; color: var(--text-secondary); margin-top: 2px; }
+  .home-actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .action-card {
+    height: 120px;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: none;
+    color: white;
+    font-family: inherit;
+  }
+  .action-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+  .action-card:active { transform: scale(0.97); }
+  .action-card.amber { background: linear-gradient(135deg, #F5A623, #e8920a); box-shadow: 0 4px 16px rgba(245,166,35,0.3); }
+  .action-card.blue  { background: linear-gradient(135deg, #2563EB, #1d4ed8); box-shadow: 0 4px 16px rgba(37,99,235,0.3); }
+  .action-card-icon { font-size: 28px; }
+  .action-card-label { font-size: 13px; font-weight: 600; }
+
+  .recent-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 12px;
+  }
+  .empty-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+    border: 1.5px dashed var(--border);
+  }
+
+  /* ════════════════════════════════════
+     SCREEN 5 — Send Parcel
+  ════════════════════════════════════ */
+  #screen-send { background: var(--bg); }
+
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0 20px;
+  }
+  .nav-title { font-size: 18px; font-weight: 700; color: var(--navy); }
+
+  .step-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+  .step-dot {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .step-dot.active { background: var(--amber); }
+
+  /* ════════════════════════════════════
+     SCREEN 6 — Track Delivery
+  ════════════════════════════════════ */
+  #screen-track { background: var(--bg); }
+
+  .tracking-card {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .tracking-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .status-badge {
+    background: rgba(37,99,235,0.1);
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+  .tracking-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-top: 1px solid var(--border);
+  }
+  .tracking-info-row:first-child { border-top: none; }
+  .tracking-label { font-size: 13px; color: var(--text-secondary); }
+  .tracking-value { font-size: 13px; font-weight: 600; color: var(--navy); }
+
+  .timeline-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-top: 16px;
+    margin-bottom: 12px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+  .timeline-event {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .timeline-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--amber);
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+  .timeline-status { font-size: 13px; font-weight: 600; color: var(--navy); }
+  .timeline-desc   { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+  .timeline-time   { font-size: 11px; color: var(--text-secondary); opacity: 0.7; }
+
+  /* ════════════════════════════════════
+     Navigation dots
+  ════════════════════════════════════ */
+  .nav-dots {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  .nav-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transition: background 0.3s, transform 0.3s;
+    cursor: pointer;
+  }
+  .nav-dot.active {
+    background: white;
+    transform: scale(1.3);
+  }
+
+  /* ── Screen labels ── */
+  .screen-labels {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 500px;
+  }
+  .screen-label {
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.05);
+    transition: all 0.2s;
+  }
+  .screen-label:hover { background: rgba(255,255,255,0.12); color: white; }
+  .screen-label.active { background: rgba(255,255,255,0.2); color: white; border-color: rgba(255,255,255,0.5); }
+
+  /* ── Pill notification ── */
+  .demo-badge {
+    background: rgba(245,166,35,0.15);
+    border: 1px solid rgba(245,166,35,0.4);
+    color: #F5A623;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 100px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-header">
+  <div class="demo-badge">✦ Interactive Prototype</div>
+  <h1 style="margin-top:12px;">WayDrop iOS</h1>
+  <p>Tap through the complete user journey · Ghana's parcel delivery app</p>
+</div>
+
+<!-- Phone -->
+<div class="phone">
+  <div class="dynamic-island"></div>
+  <div class="phone-inner">
+
+    <!-- ═══════════ SCREEN 1: WELCOME ═══════════ -->
+    <div class="screen active" id="screen-welcome">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-bar-icons">
+          <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="1" fill="currentColor" opacity=".4"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="currentColor" opacity=".6"/><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/><rect x="14" y="1" width="2.5" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+          <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.5C10.5 2.5 12.7 3.6 14.2 5.3L15.5 4C13.6 1.9 11 0.5 8 0.5C5 0.5 2.4 1.9 0.5 4L1.8 5.3C3.3 3.6 5.5 2.5 8 2.5Z" fill="currentColor"/><path d="M8 5.5C9.7 5.5 11.2 6.2 12.3 7.3L13.6 6C12.1 4.5 10.2 3.5 8 3.5C5.8 3.5 3.9 4.5 2.4 6L3.7 7.3C4.8 6.2 6.3 5.5 8 5.5Z" fill="currentColor"/><circle cx="8" cy="10" r="1.5" fill="currentColor"/></svg>
+          <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0" y="1" width="22" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="1.5" y="2.5" width="16" height="7" rx="2" fill="currentColor"/><rect x="22.5" y="3.5" width="2" height="5" rx="1" fill="currentColor" opacity=".4"/></svg>
+        </div>
+      </div>
+      <div class="screen-content">
+        <div class="welcome-content">
+          <div class="welcome-logo">W</div>
+          <p class="welcome-title">Welcome to</p>
+          <p class="welcome-brand">WayDrop</p>
+          <p class="welcome-tagline">Fast, reliable parcel delivery<br>across Accra and beyond.</p>
+          <div class="welcome-actions">
+            <button class="btn-primary" onclick="goto('signup')">Sign Up</button>
+            <button class="btn-secondary" onclick="goto('login')">Log In</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ SCREEN 2: SIGN UP ═══════════ -->
+    <div class="screen" id="screen-signup">
+      <div class="status-bar"><span>9:41</span><div class="status-bar-icons"><svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="1" fill="currentColor" opacity=".4"/><rect x="4.5" y="2" width="3" height="10" rx="1" fill="currentColor" opacity=".6"/><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg></div></div>
+      <div class="screen-content">
+        <div class="nav-bar">
+          <button class="back-btn" onclick="goto('welcome')">
+            <svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          </button>
+          <span class="nav-title">Create Account</span>
+        </div>
+        <div class="signup-header">
+          <h2>Join WayDrop 🇬🇭</h2>
+          <p>Send parcels anywhere in Accra today</p>
+        </div>
+        <div class="field-group">
+          <div>
+            <label class="field-label">Full Name</label>
+            <input class="text-field" type="text" value="Kwame Mensah" placeholder="Full name">
+          </div>
+          <div>
+            <label class="field-label">Email Address</label>
+            <input class="text-field" type="email" value="kwame@gmail.com" placeholder="Email">
+          </div>
+          <div>
+            <label class="field-label">Phone Number</label>
+            <input class="text-field" type="tel" value="+233 24 123 4567" placeholder="+233...">
+          </div>
+          <div>
+            <label class="field-label">Password</label>
+            <input class="text-field" type="password" value="••••••••" placeholder="Min 8 characters">
+          </div>
+        </div>
+        <div style="margin-top:28px;">
+          <button class="btn-primary" onclick="goto('home')">Create Account</button>
+          <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin-top:16px;">
+            Already have an account? <span style="color:var(--blue);cursor:pointer;font-weight:600;" onclick="goto('login')">Log in</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ SCREEN 3: LOGIN ═══════════ -->
+    <div class="screen" id="screen-login">
+      <div class="status-bar"><span>9:41</span><div class="status-bar-icons"><svg width="17" height="12" viewBox="0 0 17 12"><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg></div></div>
+      <div class="screen-content">
+        <div class="nav-bar">
+          <button class="back-btn" onclick="goto('welcome')">
+            <svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          </button>
+          <span class="nav-title">Welcome back</span>
+        </div>
+        <div style="margin-bottom:28px;">
+          <h2 style="font-size:24px;font-weight:700;color:var(--navy);">Sign in to WayDrop</h2>
+          <p style="font-size:14px;color:var(--text-secondary);margin-top:4px;">Enter your credentials to continue</p>
+        </div>
+        <div class="field-group">
+          <div>
+            <label class="field-label">Email Address</label>
+            <input class="text-field" type="email" value="kwame@gmail.com" placeholder="Email">
+          </div>
+          <div>
+            <label class="field-label">Password</label>
+            <input class="text-field" type="password" value="••••••••" placeholder="Password">
+          </div>
+        </div>
+        <div style="margin-top:32px;">
+          <button class="btn-primary" onclick="goto('home')">Sign In</button>
+          <p style="text-align:center;font-size:13px;color:var(--text-secondary);margin-top:16px;">
+            No account? <span style="color:var(--blue);cursor:pointer;font-weight:600;" onclick="goto('signup')">Sign up free</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ SCREEN 4: HOME ═══════════ -->
+    <div class="screen" id="screen-home">
+      <div class="status-bar"><span>9:41</span><div class="status-bar-icons"><svg width="17" height="12" viewBox="0 0 17 12"><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg></div></div>
+      <div class="screen-content">
+        <div class="home-greeting">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <h2 class="section-title">Hello, Kwame 👋</h2>
+              <p class="home-greeting-sub">What would you like to do?</p>
+            </div>
+            <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--amber),var(--blue));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;">K</div>
+          </div>
+        </div>
+        <div class="home-actions-grid">
+          <button class="action-card amber" onclick="goto('send')">
+            <div class="action-card-icon">📦</div>
+            <div class="action-card-label">Send a Parcel</div>
+          </button>
+          <button class="action-card blue" onclick="goto('track')">
+            <div class="action-card-icon">🛵</div>
+            <div class="action-card-label">Track Delivery</div>
+          </button>
+        </div>
+        <p class="recent-section-title">Recent Deliveries</p>
+        <div class="empty-card">
+          <div style="font-size:28px;margin-bottom:8px;">📬</div>
+          No deliveries yet. Send your first parcel!
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ SCREEN 5: SEND PARCEL ═══════════ -->
+    <div class="screen" id="screen-send">
+      <div class="status-bar"><span>9:41</span><div class="status-bar-icons"><svg width="17" height="12" viewBox="0 0 17 12"><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg></div></div>
+      <div class="screen-content">
+        <div class="nav-bar">
+          <button class="back-btn" onclick="goto('home')">
+            <svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          </button>
+          <span class="nav-title" id="send-step-title">Send a Parcel</span>
+        </div>
+        <div class="step-bar">
+          <div class="step-dot active" id="sdot-0"></div>
+          <div class="step-dot" id="sdot-1"></div>
+          <div class="step-dot" id="sdot-2"></div>
+          <div class="step-dot" id="sdot-3"></div>
+        </div>
+        <!-- Step 0: Address -->
+        <div id="send-step-0">
+          <h3 class="section-title">Where is it going?</h3>
+          <p class="section-subtitle" style="margin-bottom:20px;">Enter pickup and drop-off addresses in Accra.</p>
+          <div class="field-group">
+            <div>
+              <label class="field-label">📍 Pickup address</label>
+              <input class="text-field" type="text" value="East Legon, Accra" placeholder="Pickup address">
+            </div>
+            <div>
+              <label class="field-label">🏁 Drop-off address</label>
+              <input class="text-field" type="text" value="Osu, Oxford Street" placeholder="Drop-off address">
+            </div>
+          </div>
+          <div style="margin-top:28px;"><button class="btn-primary" onclick="sendStep(1)">Next</button></div>
+        </div>
+        <!-- Step 1: Details -->
+        <div id="send-step-1" style="display:none;">
+          <h3 class="section-title">What are you sending?</h3>
+          <p class="section-subtitle" style="margin-bottom:20px;">Describe the parcel contents briefly.</p>
+          <div>
+            <label class="field-label">📝 Description</label>
+            <input class="text-field" type="text" value="Books and clothing" placeholder="e.g. books, clothing...">
+          </div>
+          <div style="margin-top:28px;"><button class="btn-primary" onclick="sendStep(2)">Next</button></div>
+        </div>
+        <!-- Step 2: Dimensions -->
+        <div id="send-step-2" style="display:none;">
+          <h3 class="section-title">Parcel dimensions</h3>
+          <p class="section-subtitle" style="margin-bottom:20px;">Size in cm and weight in kg.</p>
+          <div class="field-group">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div><label class="field-label">Length (cm)</label><input class="text-field" value="30" type="number"></div>
+              <div><label class="field-label">Width (cm)</label><input class="text-field" value="20" type="number"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div><label class="field-label">Height (cm)</label><input class="text-field" value="15" type="number"></div>
+              <div><label class="field-label">Weight (kg)</label><input class="text-field" value="2.5" type="number"></div>
+            </div>
+          </div>
+          <div style="margin-top:28px;"><button class="btn-primary" onclick="sendStep(3)">Next</button></div>
+        </div>
+        <!-- Step 3: Confirm -->
+        <div id="send-step-3" style="display:none;">
+          <h3 class="section-title">Review your parcel</h3>
+          <div style="background:white;border-radius:16px;padding:20px;margin-top:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+            <div class="tracking-info-row" style="border:none;padding-top:0;"><span class="tracking-label">From</span><span class="tracking-value">East Legon, Accra</span></div>
+            <div class="tracking-info-row"><span class="tracking-label">To</span><span class="tracking-value">Osu, Oxford Street</span></div>
+            <div class="tracking-info-row"><span class="tracking-label">Contents</span><span class="tracking-value">Books and clothing</span></div>
+            <div class="tracking-info-row"><span class="tracking-label">Size</span><span class="tracking-value">30 × 20 × 15 cm</span></div>
+            <div class="tracking-info-row"><span class="tracking-label">Weight</span><span class="tracking-value">2.5 kg</span></div>
+            <div class="tracking-info-row"><span class="tracking-label">Estimated cost</span><span class="tracking-value" style="color:var(--amber);font-weight:700;">GHS 25.00</span></div>
+          </div>
+          <div style="margin-top:24px;"><button class="btn-primary" onclick="showSuccess()">✓ Confirm &amp; Send</button></div>
+        </div>
+        <!-- Success state -->
+        <div id="send-success" style="display:none;text-align:center;padding-top:40px;">
+          <div style="font-size:64px;">🎉</div>
+          <h3 style="font-size:22px;font-weight:700;color:var(--navy);margin-top:16px;">Parcel Submitted!</h3>
+          <p style="font-size:14px;color:var(--text-secondary);margin-top:8px;line-height:1.5;">Your parcel is being processed.<br>You'll receive updates shortly.</p>
+          <div style="background:var(--green-light);border-radius:12px;padding:16px;margin-top:20px;">
+            <p style="font-size:13px;font-weight:600;color:#065F46;">Parcel ID: WD-20240628-0042</p>
+          </div>
+          <button class="btn-blue" style="margin-top:24px;" onclick="goto('home')">Back to Home</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ SCREEN 6: TRACK DELIVERY ═══════════ -->
+    <div class="screen" id="screen-track">
+      <div class="status-bar"><span>9:41</span><div class="status-bar-icons"><svg width="17" height="12" viewBox="0 0 17 12"><rect x="9" y="0" width="3" height="12" rx="1" fill="currentColor"/></svg></div></div>
+      <div class="screen-content">
+        <div class="nav-bar">
+          <button class="back-btn" onclick="goto('home')">
+            <svg width="10" height="16" viewBox="0 0 10 16"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          </button>
+          <span class="nav-title">Track Delivery</span>
+        </div>
+        <div>
+          <label class="field-label">Delivery ID</label>
+          <input class="text-field" type="text" value="WD-20240628-0038" id="track-input">
+        </div>
+        <button class="btn-blue" style="margin-top:14px;" onclick="showTracking()">Track</button>
+        <div id="track-result" style="display:none;">
+          <div class="tracking-card">
+            <div class="tracking-header">
+              <span style="font-size:15px;font-weight:700;color:var(--navy);">WD-20240628-0038</span>
+              <span class="status-badge">In Transit</span>
+            </div>
+            <div class="tracking-info-row"><span class="tracking-label">Method</span><span class="tracking-value">🛵 Motorbike</span></div>
+            <div class="tracking-info-row"><span class="tracking-label">Driver</span><span class="tracking-value">Ama Boateng</span></div>
+            <div class="tracking-info-row"><span class="tracking-label">ETA</span><span class="tracking-value" style="color:var(--success);">~8 minutes</span></div>
+            <p class="timeline-title">📍 Timeline</p>
+            <div class="timeline-event">
+              <div class="timeline-dot"></div>
+              <div><div class="timeline-status">In Transit</div><div class="timeline-desc">Driver picked up your parcel</div><div class="timeline-time">9:15 AM · Today</div></div>
+            </div>
+            <div class="timeline-event">
+              <div class="timeline-dot" style="background:var(--border);"></div>
+              <div><div class="timeline-status" style="color:var(--text-secondary);">Assigned</div><div class="timeline-desc">Driver Ama Boateng assigned</div><div class="timeline-time">9:02 AM · Today</div></div>
+            </div>
+            <div class="timeline-event" style="margin-bottom:0;">
+              <div class="timeline-dot" style="background:var(--border);"></div>
+              <div><div class="timeline-status" style="color:var(--text-secondary);">Created</div><div class="timeline-desc">Parcel submitted successfully</div><div class="timeline-time">8:47 AM · Today</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /phone-inner -->
+</div><!-- /phone -->
+
+<!-- Controls -->
+<div class="screen-labels">
+  <div class="screen-label active" id="lbl-welcome" onclick="goto('welcome')">Welcome</div>
+  <div class="screen-label" id="lbl-signup" onclick="goto('signup')">Sign Up</div>
+  <div class="screen-label" id="lbl-login" onclick="goto('login')">Login</div>
+  <div class="screen-label" id="lbl-home" onclick="goto('home')">Home</div>
+  <div class="screen-label" id="lbl-send" onclick="goto('send')">Send Parcel</div>
+  <div class="screen-label" id="lbl-track" onclick="goto('track')">Track</div>
+</div>
+
+<div style="color:rgba(255,255,255,0.4);font-size:12px;text-align:center;">
+  Tap any screen or use the labels above · Built from live iOS source code
+</div>
+
+<script>
+  const screens = ['welcome','signup','login','home','send','track'];
+  let current = 'welcome';
+  let sendStepNum = 0;
+
+  function goto(name) {
+    if (name === current) return;
+
+    const prev = document.getElementById('screen-' + current);
+    const next = document.getElementById('screen-' + name);
+
+    prev.classList.remove('active');
+    prev.classList.add('exit-left');
+    setTimeout(() => prev.classList.remove('exit-left'), 400);
+
+    next.classList.add('active');
+    current = name;
+
+    // Update labels
+    screens.forEach(s => {
+      document.getElementById('lbl-' + s)?.classList.remove('active');
+    });
+    document.getElementById('lbl-' + name)?.classList.add('active');
+
+    // Reset send parcel state when entering
+    if (name === 'send') {
+      sendStep(0);
+    }
+    if (name === 'track') {
+      document.getElementById('track-result').style.display = 'none';
+    }
+  }
+
+  function sendStep(n) {
+    const titles = ['Send a Parcel', 'Parcel Details', 'Parcel Size', 'Confirm'];
+    sendStepNum = n;
+
+    // Hide all steps and success
+    for (let i = 0; i < 4; i++) {
+      const el = document.getElementById('send-step-' + i);
+      if (el) el.style.display = 'none';
+    }
+    document.getElementById('send-success').style.display = 'none';
+
+    // Show current step
+    document.getElementById('send-step-' + n).style.display = 'block';
+    document.getElementById('send-step-title').textContent = titles[n];
+
+    // Update step dots
+    for (let i = 0; i < 4; i++) {
+      const dot = document.getElementById('sdot-' + i);
+      dot.classList.toggle('active', i <= n);
+    }
+  }
+
+  function showSuccess() {
+    for (let i = 0; i < 4; i++) {
+      const el = document.getElementById('send-step-' + i);
+      if (el) el.style.display = 'none';
+    }
+    document.getElementById('send-success').style.display = 'block';
+    document.getElementById('send-step-title').textContent = 'Submitted!';
+    // All dots amber
+    for (let i = 0; i < 4; i++) {
+      document.getElementById('sdot-' + i).classList.add('active');
+    }
+  }
+
+  function showTracking() {
+    document.getElementById('track-result').style.display = 'block';
+    document.getElementById('track-result').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+</script>
+
+</body>
+</html>
